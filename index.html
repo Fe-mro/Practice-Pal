@@ -1112,28 +1112,53 @@ function playJubilation() {
 let metronomeBpm = 120;
 let metronomeOn = false;
 let metronomeVolume = 0.7;
-let metronomeInterval = null;
 let metronomeBeat = 0;
-let metronomeLookaheadId = null;
+let metronomeSchedulerId = null;
 let metronomeNextNoteTime = 0;
-const metronomeScheduleAheadTime = 0.1; // seconds
-const metronomeScheduleInterval = 25;   // ms
+let metronomeLastScheduleTime = 0;
+const METRONOME_LOOKAHEAD = 0.1; // seconds ahead to schedule
+const METRONOME_TICK_MS = 25;     // scheduler interval
+
+function initMetronomeAudio() {
+  // MUST be called synchronously from a user gesture (iOS Safari)
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new Ctx();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function primeMetronome() {
+  // Play an inaudible click to fully unlock iOS audio
+  try {
+    const ctx = audioCtx;
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 1;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.01);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.02);
+  } catch(e) {}
+}
 
 function updateBpm(value) {
   metronomeBpm = parseInt(value);
   document.getElementById('bpmValue').textContent = metronomeBpm;
-  if (metronomeOn) {
-    // Restart with new tempo
-    stopMetronomeScheduler();
-    startMetronomeScheduler();
-  }
 }
 
 function toggleMetronome() {
+  // This is a user gesture on iOS - create/unlock audio HERE
+  initMetronomeAudio();
+  primeMetronome();
+
   metronomeOn = document.getElementById('metronomeToggle').checked;
   if (metronomeOn) {
-    // Initialize audio context (needs user gesture)
-    getAudioCtx();
     startMetronomeScheduler();
   } else {
     stopMetronomeScheduler();
@@ -1141,30 +1166,46 @@ function toggleMetronome() {
 }
 
 function startMetronomeScheduler() {
+  if (!audioCtx) return;
   metronomeBeat = 0;
-  metronomeNextNoteTime = (audioCtx ? audioCtx.currentTime : 0) + 0.05;
-  metronomeLookaheadId = setInterval(scheduleMetronomeBeats, metronomeScheduleInterval);
+  metronomeNextNoteTime = audioCtx.currentTime + 0.05;
+  metronomeLastScheduleTime = performance.now();
+  if (metronomeSchedulerId) clearTimeout(metronomeSchedulerId);
+  metronomeSchedulerId = setTimeout(metronomeTick, METRONOME_TICK_MS);
 }
 
 function stopMetronomeScheduler() {
-  if (metronomeLookaheadId) {
-    clearInterval(metronomeLookaheadId);
-    metronomeLookaheadId = null;
+  if (metronomeSchedulerId) {
+    clearTimeout(metronomeSchedulerId);
+    metronomeSchedulerId = null;
   }
 }
 
-function scheduleMetronomeBeats() {
-  if (!audioCtx) return;
-  while (metronomeNextNoteTime < audioCtx.currentTime + metronomeScheduleAheadTime) {
-    playMetronomeClick(metronomeNextNoteTime, metronomeBeat % 4 === 0);
+function metronomeTick() {
+  if (!metronomeOn || !audioCtx) return;
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  // Schedule all beats that fall within the lookahead window
+  while (metronomeNextNoteTime < audioCtx.currentTime + METRONOME_LOOKAHEAD) {
+    scheduleMetronomeClick(metronomeNextNoteTime);
     metronomeNextNoteTime += 60.0 / metronomeBpm;
     metronomeBeat++;
   }
+
+  // Self-rescheduling with a small drift correction
+  const now = performance.now();
+  const elapsed = (now - metronomeLastScheduleTime) / 1000;
+  const nextDelay = Math.max(0, METRONOME_TICK_MS - (elapsed * 1000 - METRONOME_TICK_MS));
+  metronomeLastScheduleTime = now;
+  metronomeSchedulerId = setTimeout(metronomeTick, METRONOME_TICK_MS);
 }
 
-function playMetronomeClick(time, isAccent) {
+function scheduleMetronomeClick(time) {
   try {
-    const ctx = getAudioCtx();
+    const ctx = audioCtx;
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -1183,8 +1224,17 @@ function playMetronomeClick(time, isAccent) {
 function adjustVolume(delta) {
   metronomeVolume = Math.max(0, Math.min(1, metronomeVolume + delta));
   const bar = document.getElementById('volumeBar');
-  bar.style.width = (metronomeVolume * 100) + '%';
+  if (bar) bar.style.width = (metronomeVolume * 100) + '%';
 }
+
+// Re-prime audio context on any user interaction (iOS Safari workaround)
+['touchstart', 'touchend', 'click', 'keydown'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }, { passive: true });
+});
 
 // Stop metronome on stopTimer
 const _origStopTimer = stopTimer;
