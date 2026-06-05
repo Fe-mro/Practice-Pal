@@ -1108,19 +1108,16 @@ function playJubilation() {
   } catch(e) {}
 }
 
-// ========= Metronome =========
+// ========= Metronome (iOS-Safari friendly) =========
 let metronomeBpm = 120;
 let metronomeOn = false;
 let metronomeVolume = 0.7;
 let metronomeBeat = 0;
-let metronomeSchedulerId = null;
-let metronomeNextNoteTime = 0;
-let metronomeLastScheduleTime = 0;
-const METRONOME_LOOKAHEAD = 0.1; // seconds ahead to schedule
-const METRONOME_TICK_MS = 25;     // scheduler interval
+let metronomeTimerId = null;
+let metronomeNextClickTime = 0;
 
-function initMetronomeAudio() {
-  // MUST be called synchronously from a user gesture (iOS Safari)
+function ensureAudioCtx() {
+  // MUST be called synchronously from a user gesture on iOS
   if (!audioCtx) {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     audioCtx = new Ctx();
@@ -1128,23 +1125,29 @@ function initMetronomeAudio() {
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
+  return audioCtx;
 }
 
-function primeMetronome() {
-  // Play an inaudible click to fully unlock iOS audio
-  try {
-    const ctx = audioCtx;
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 1;
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.01);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.02);
-  } catch(e) {}
+function playClickAt(time, freq, vol) {
+  // Schedules a single click sound at the given audioContext time
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, time);
+  gain.gain.linearRampToValueAtTime(vol, time + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
+  osc.start(time);
+  osc.stop(time + 0.06);
+}
+
+function playImmediateClick() {
+  // Plays a click RIGHT NOW (must be inside the user gesture handler for iOS)
+  const ctx = ensureAudioCtx();
+  playClickAt(ctx.currentTime, 1000, metronomeVolume * 0.4);
 }
 
 function updateBpm(value) {
@@ -1153,72 +1156,47 @@ function updateBpm(value) {
 }
 
 function toggleMetronome() {
-  // This is a user gesture on iOS - create/unlock audio HERE
-  initMetronomeAudio();
-  primeMetronome();
+  // This runs INSIDE a user gesture (onchange from checkbox tap)
+  // so we must create audio context and play the first click here
+  ensureAudioCtx();
+  playImmediateClick();
 
   metronomeOn = document.getElementById('metronomeToggle').checked;
   if (metronomeOn) {
-    startMetronomeScheduler();
+    startMetronome();
   } else {
-    stopMetronomeScheduler();
+    stopMetronome();
   }
 }
 
-function startMetronomeScheduler() {
+function startMetronome() {
   if (!audioCtx) return;
   metronomeBeat = 0;
-  metronomeNextNoteTime = audioCtx.currentTime + 0.05;
-  metronomeLastScheduleTime = performance.now();
-  if (metronomeSchedulerId) clearTimeout(metronomeSchedulerId);
-  metronomeSchedulerId = setTimeout(metronomeTick, METRONOME_TICK_MS);
+  metronomeNextClickTime = audioCtx.currentTime + 0.12; // small lead time
+  if (metronomeTimerId) clearTimeout(metronomeTimerId);
+  // Use setTimeout, scheduled in ms relative to now
+  scheduleNextClick();
 }
 
-function stopMetronomeScheduler() {
-  if (metronomeSchedulerId) {
-    clearTimeout(metronomeSchedulerId);
-    metronomeSchedulerId = null;
+function stopMetronome() {
+  if (metronomeTimerId) {
+    clearTimeout(metronomeTimerId);
+    metronomeTimerId = null;
   }
 }
 
-function metronomeTick() {
+function scheduleNextClick() {
   if (!metronomeOn || !audioCtx) return;
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
 
-  // Schedule all beats that fall within the lookahead window
-  while (metronomeNextNoteTime < audioCtx.currentTime + METRONOME_LOOKAHEAD) {
-    scheduleMetronomeClick(metronomeNextNoteTime);
-    metronomeNextNoteTime += 60.0 / metronomeBpm;
+  // Schedule all clicks that should happen in the next 100ms
+  while (metronomeNextClickTime < audioCtx.currentTime + 0.1) {
+    playClickAt(metronomeNextClickTime, 1000, metronomeVolume * 0.4);
+    metronomeNextClickTime += 60.0 / metronomeBpm;
     metronomeBeat++;
   }
 
-  // Self-rescheduling with a small drift correction
-  const now = performance.now();
-  const elapsed = (now - metronomeLastScheduleTime) / 1000;
-  const nextDelay = Math.max(0, METRONOME_TICK_MS - (elapsed * 1000 - METRONOME_TICK_MS));
-  metronomeLastScheduleTime = now;
-  metronomeSchedulerId = setTimeout(metronomeTick, METRONOME_TICK_MS);
-}
-
-function scheduleMetronomeClick(time) {
-  try {
-    const ctx = audioCtx;
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = 1000;
-    const vol = metronomeVolume * 0.4;
-    gain.gain.setValueAtTime(0, time);
-    gain.gain.linearRampToValueAtTime(vol, time + 0.005);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-    osc.start(time);
-    osc.stop(time + 0.06);
-  } catch(e) {}
+  // Wake up shortly to schedule the next batch
+  metronomeTimerId = setTimeout(scheduleNextClick, 25);
 }
 
 function adjustVolume(delta) {
@@ -1227,13 +1205,26 @@ function adjustVolume(delta) {
   if (bar) bar.style.width = (metronomeVolume * 100) + '%';
 }
 
-// Re-prime audio context on any user interaction (iOS Safari workaround)
+// Re-activate audio on any user interaction (helps iOS resume from suspend)
 ['touchstart', 'touchend', 'click', 'keydown'].forEach(evt => {
   document.addEventListener(evt, () => {
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
   }, { passive: true });
+});
+
+// Re-activate audio when the page becomes visible again
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    // Restart the metronome scheduler if it was on
+    if (metronomeOn) {
+      startMetronome();
+    }
+  }
 });
 
 // Stop metronome on stopTimer
