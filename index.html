@@ -347,6 +347,24 @@
   .who-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) auto; gap: 6px; margin-bottom: 6px; align-items: center; }
   .celebration-reflect { margin-top: 14px; color: var(--text-dim); text-align: center; max-width: 440px; animation: fade-in 1s 0.6s both; }
 
+  /* ===== Practice log ===== */
+  .log-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .log-stat { background: var(--card-2); border: 1px solid var(--card-border); border-radius: 12px; padding: 10px; text-align: center; }
+  .log-stat b { display: block; font-size: 1.35em; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .log-stat span { font-size: 0.75em; color: var(--text-dim); }
+  .log-list { margin-top: 12px; }
+  .log-item { background: var(--card-2); border: 1px solid var(--card-border); border-radius: 12px; margin-bottom: 8px; }
+  .log-item summary { list-style: none; cursor: pointer; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+  .log-item summary::-webkit-details-marker { display: none; }
+  .log-item .l-date { font-size: 0.8em; color: var(--text-dim); white-space: nowrap; }
+  .log-item .l-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 0.9em; }
+  .log-item .l-total { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .log-body { padding: 0 12px 10px; }
+  .log-body li span:last-child { white-space: nowrap; color: var(--text-dim); }
+  .log-body li { list-style: none; display: flex; justify-content: space-between; gap: 8px; font-size: 0.85em; padding: 4px 0; border-bottom: 1px solid var(--card-border); }
+  .log-body .log-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .log-empty { color: var(--text-dim); font-size: 0.85em; text-align: center; padding: 10px; }
+
   /* ===== Celebration ===== */
   .celebration-overlay { display: none; position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(0,0,0,0.7), rgba(0,0,0,0.95)); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
   .celebration-overlay.show { display: flex; }
@@ -564,6 +582,26 @@
       </div>
     </section>
 
+    <section class="card collapsed" id="logSection">
+      <div class="section-header" onclick="toggleSection('logSection')">
+        <h2>&#128200; <span data-i18n="log"></span></h2>
+        <span class="toggle-icon">&#9662;</span>
+      </div>
+      <div class="section-body">
+        <div class="log-stats" id="logStats"></div>
+        <div class="preset-row">
+          <button class="btn btn-blue btn-small" onclick="shareWeekImage()">&#128228; <span data-i18n="shareWeek"></span></button>
+          <button class="btn btn-ghost btn-small" onclick="exportCsv()">&#128196; <span data-i18n="exportCsv"></span></button>
+        </div>
+        <div class="preset-row">
+          <button class="btn btn-ghost btn-small" onclick="exportBackup()">&#128190; <span data-i18n="exportBackup"></span></button>
+          <button class="btn btn-ghost btn-small" onclick="document.getElementById('importFile').click()">&#128229; <span data-i18n="importBackup"></span></button>
+          <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importBackup(this)">
+        </div>
+        <div class="log-list" id="logList"></div>
+      </div>
+    </section>
+
     <section class="card collapsed" id="profileSection">
       <div class="section-header" onclick="toggleSection('profileSection')">
         <h2>&#127919; <span data-i18n="profile"></span></h2>
@@ -580,6 +618,7 @@
               <select id="snapSelect" onchange="setCompare(this.value)" aria-label="Compare"></select>
               <button class="icon-btn danger" onclick="deleteSnapshot()" data-i18n-title="snapDelete">&#10005;</button>
             </div>
+            <button class="btn btn-blue btn-small btn-block" style="margin-top:10px" onclick="shareProfileImage()">&#128228; <span data-i18n="shareProfile"></span></button>
           </div>
           <div>
             <div class="prof-step" data-i18n="stepCats"></div>
@@ -606,7 +645,8 @@
   <div class="celebration-text">&#127881; Bravo! &#127881;</div>
   <div class="celebration-sub" id="celebrationSub"></div>
   <div class="celebration-reflect" id="celebrationReflect"></div>
-  <button class="btn btn-gold celebration-close" onclick="closeCelebration()">&#128077; <span data-i18n="close"></span></button>
+  <button class="btn btn-blue celebration-close" onclick="shareSessionImage(lastSession)">&#128228; <span data-i18n="shareImage"></span></button>
+  <button class="btn btn-gold celebration-close" style="margin-top:12px" onclick="closeCelebration()">&#128077; <span data-i18n="close"></span></button>
 </div>
 
 <script>
@@ -724,10 +764,31 @@ const I18N = {
     weakest: 'Möglicher Schwerpunkt: {c} ({n}/10)',
     maxCats: 'Maximal 12 Kategorien.',
     minCats: 'Mindestens 3 Kategorien.',
+    log: 'Übe-Protokoll',
+    today: 'Heute', last7: 'Letzte 7 Tage', last30: 'Letzte 30 Tage',
+    sessionsN: '{n} Sessions', sessions1: '1 Session',
+    shareWeek: 'Woche als Bild teilen',
+    shareImage: 'Als Bild teilen',
+    shareProfile: 'Profil als Bild teilen',
+    exportCsv: 'Export (CSV / Excel)',
+    exportBackup: 'Sicherung exportieren',
+    importBackup: 'Sicherung importieren',
+    importConfirm: 'Sicherung vom {d} importieren? Deine aktuellen Daten in diesem Browser werden ersetzt.',
+    importError: 'Diese Datei ist keine Practice-Pal-Sicherung.',
+    noSessions: 'Noch keine Sessions. Sobald du mindestens 1 Minute geübt hast (Ende oder Stop), erscheint sie hier.',
+    confirmDeleteEntry: 'Diesen Eintrag aus dem Protokoll löschen?',
+    sessionTitle: 'Übe-Session',
+    weekTitle: 'Meine Übe-Woche',
+    practicedLabel: 'geübt',
+    totalLabel: 'Gesamt',
+    dashedFrom: 'gestrichelt: Stand vom {d}',
+    days: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+    csvHeader: ['Datum', 'Uhrzeit', 'Vorlage', 'Einheit', 'Geplant (Min.)', 'Geübt (Min.)'],
     defaultCats: ['Technik', 'Klang', 'Time & Groove', 'Harmonie & Voicings', 'Improvisation & Vocabulary', 'Repertoire', 'Gehör'],
     cats: { methods: 'Übe-Methoden', latin: 'Latin & Comping-Patterns', mind: 'Wahrnehmung & Achtsamkeit', scales: 'Skalen & Tonleitern', voicings: 'Voicings & Akkorde', vocab: 'Vocabulary & Linien', transcription: 'Transkription', technique: 'Technik', rhythm: 'Rhythmus & Time', ear: 'Gehörbildung', repertoire: 'Repertoire & Stücke' },
-    intervals: { 1: 'kleine Sekunde (chromatisch)', 2: 'große Sekunde (Ganztöne)', 3: 'kleine Terz', 4: 'große Terz', 5: 'Quarte (Quartenzirkel)', 6: 'Tritonus', 7: 'Quinte (Quintenzirkel)', 8: 'kleine Sexte', 9: 'große Sexte' },
-    intervalsShort: { 1: 'kl. Sekunde', 2: 'gr. Sekunde', 3: 'kl. Terz', 4: 'gr. Terz', 5: 'Quarte', 6: 'Tritonus', 7: 'Quinte', 8: 'kl. Sexte', 9: 'gr. Sexte' },
+    intervals: { 1: 'kleine Sekunde (chromatisch)', 2: 'große Sekunde (Ganztöne)', 3: 'kleine Terz', 4: 'große Terz', 5: 'Quarte (Quartenzirkel)', 6: 'Tritonus', 7: 'Quinte (Quintenzirkel)', 8: 'kleine Sexte', 9: 'große Sexte', 10: 'kleine Septime', 11: 'große Septime' },
+    dirLabel: 'Richtung', dirUp: 'aufwärts ↑', dirDown: 'abwärts ↓',
+    intervalsShort: { 1: 'kl. Sekunde', 2: 'gr. Sekunde', 3: 'kl. Terz', 4: 'gr. Terz', 5: 'Quarte', 6: 'Tritonus', 7: 'Quinte', 8: 'kl. Sexte', 9: 'gr. Sexte', 10: 'kl. Septime', 11: 'gr. Septime' },
     from: 'ab'
   },
   en: {
@@ -840,10 +901,31 @@ const I18N = {
     weakest: 'Possible focus: {c} ({n}/10)',
     maxCats: 'Maximum 12 categories.',
     minCats: 'At least 3 categories.',
+    log: 'Practice log',
+    today: 'Today', last7: 'Last 7 days', last30: 'Last 30 days',
+    sessionsN: '{n} sessions', sessions1: '1 session',
+    shareWeek: 'Share week as image',
+    shareImage: 'Share as image',
+    shareProfile: 'Share profile as image',
+    exportCsv: 'Export (CSV / Excel)',
+    exportBackup: 'Export backup',
+    importBackup: 'Import backup',
+    importConfirm: 'Import backup from {d}? Your current data in this browser will be replaced.',
+    importError: 'This file is not a Practice Pal backup.',
+    noSessions: 'No sessions yet. As soon as you have practiced at least 1 minute (finish or stop), it will appear here.',
+    confirmDeleteEntry: 'Delete this entry from the log?',
+    sessionTitle: 'Practice session',
+    weekTitle: 'My practice week',
+    practicedLabel: 'practiced',
+    totalLabel: 'Total',
+    dashedFrom: 'dashed: status of {d}',
+    days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    csvHeader: ['Date', 'Time', 'Preset', 'Unit', 'Planned (min)', 'Practiced (min)'],
     defaultCats: ['Technique', 'Sound', 'Time & groove', 'Harmony & voicings', 'Improvisation & vocabulary', 'Repertoire', 'Ear'],
     cats: { methods: 'Practice methods', latin: 'Latin & comping patterns', mind: 'Awareness & mindfulness', scales: 'Scales', voicings: 'Voicings & chords', vocab: 'Vocabulary & lines', transcription: 'Transcription', technique: 'Technique', rhythm: 'Rhythm & time', ear: 'Ear training', repertoire: 'Repertoire & pieces' },
-    intervals: { 1: 'minor second (chromatic)', 2: 'major second (whole steps)', 3: 'minor third', 4: 'major third', 5: 'fourth (circle of fourths)', 6: 'tritone', 7: 'fifth (circle of fifths)', 8: 'minor sixth', 9: 'major sixth' },
-    intervalsShort: { 1: 'min 2nd', 2: 'maj 2nd', 3: 'min 3rd', 4: 'maj 3rd', 5: '4th', 6: 'tritone', 7: '5th', 8: 'min 6th', 9: 'maj 6th' },
+    intervals: { 1: 'minor second (chromatic)', 2: 'major second (whole steps)', 3: 'minor third', 4: 'major third', 5: 'fourth (circle of fourths)', 6: 'tritone', 7: 'fifth (circle of fifths)', 8: 'minor sixth', 9: 'major sixth', 10: 'minor seventh', 11: 'major seventh' },
+    dirLabel: 'Direction', dirUp: 'up ↑', dirDown: 'down ↓',
+    intervalsShort: { 1: 'min 2nd', 2: 'maj 2nd', 3: 'min 3rd', 4: 'maj 3rd', 5: '4th', 6: 'tritone', 7: '5th', 8: 'min 6th', 9: 'maj 6th', 10: 'min 7th', 11: 'maj 7th' },
     from: 'from'
   }
 };
@@ -885,13 +967,15 @@ function noteName(pc) {
 // does not reach all 12 keys on its own (2nds, 3rds, tritone, 6ths), the
 // sequence continues one semitone higher until every key has appeared.
 // =====================================================================
-const INTERVALS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const INTERVALS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 function gcd(a, b) { return b ? gcd(b, a % b) : a; }
-function keySequence(semi, start) {
-  const g = gcd(semi, 12), len = 12 / g, seq = [], groups = [];
+// dir = 1 (up) or -1 (down). Groups that cannot reach all 12 keys continue
+// one semitone higher (up) or one semitone lower (down).
+function keySequence(semi, start, dir) {
+  dir = dir === -1 ? -1 : 1;
+  const g = gcd(semi, 12), len = 12 / g, seq = [];
   for (let k = 0; k < g; k++) {
-    for (let j = 0; j < len; j++) seq.push((start + k + j * semi) % 12);
-    groups.push(len);
+    for (let j = 0; j < len; j++) seq.push((((start + dir * k + dir * j * semi) % 12) + 12) % 12);
   }
   return { seq, groupLen: len };
 }
@@ -1351,7 +1435,7 @@ L('ea-solfege-mel', 'ear', ['all', 'voice', 'jazz'], 8,
   ['Ein Thema in Solfège-Silben singen, chromatische Töne mit Di, Ri, Fi, Si, Li bzw. Ra, Me, Le, Te. Danach auf dem Instrument spielen.',
    'Sing a theme in solfège syllables, chromatic notes with di, ri, fi, si, li or ra, me, le, te. Then play it on your instrument.']);
 
-const CAT_ORDER = ['methods', 'scales', 'voicings', 'vocab', 'transcription', 'technique', 'rhythm', 'latin', 'ear', 'mind', 'repertoire'];
+const CAT_ORDER = ['scales', 'voicings', 'vocab', 'transcription', 'technique', 'rhythm', 'latin', 'ear', 'mind', 'repertoire', 'methods'];
 const TAG_ORDER = ['jazz', 'piano', 'classical', 'guitar', 'winds', 'strings', 'voice', 'drums'];
 
 // ---- Built-in presets: [libraryId, minutes]
@@ -1401,6 +1485,8 @@ let remainingSeconds = 0;
 let isRunning = false;
 let isPaused = false;
 let totalPracticeMs = 0;
+let practicedById = {};   // unit id -> ms actually practiced in this session
+let lastSession = null;   // last recorded session (for sharing from the celebration)
 let lastTick = 0;
 let lastBeepSecond = -1;
 let audioCtx = null;
@@ -1729,7 +1815,7 @@ function resetCycle() {
   const sec = units[currentIndex];
   unitDownbeats = 0;
   if (sec && sec.cycle) {
-    const ks = keySequence(sec.cycle.semi, sec.cycle.start || 0);
+    const ks = keySequence(sec.cycle.semi, sec.cycle.start || 0, sec.cycle.dir);
     cyc = { seq: ks.seq, groupLen: ks.groupLen, idx: 0, manualOffset: 0 };
   } else {
     cyc = null;
@@ -1770,7 +1856,7 @@ function renderCycle(pop) {
   keyEl.textContent = noteName(cyc.seq[i]);
   if (pop) { keyEl.classList.remove('pop'); void keyEl.offsetWidth; keyEl.classList.add('pop'); }
   document.getElementById('kcNext').textContent = noteName(cyc.seq[(i + 1) % 12]);
-  document.getElementById('kcLabel').textContent = '🔁 ' + t('intervals')[sec.cycle.semi] + ' · ' + t('keyNofM', { n: i + 1 });
+  document.getElementById('kcLabel').textContent = '🔁 ' + t('intervals')[sec.cycle.semi] + ' ' + (sec.cycle.dir === -1 ? t('dirDown') : t('dirUp')) + ' · ' + t('keyNofM', { n: i + 1 });
   document.getElementById('kcRound').textContent = round > 1 ? t('roundN', { n: round }) : '';
   const chips = document.getElementById('kcChips');
   let html = '';
@@ -1876,7 +1962,7 @@ function startTimer() {
     startTickLoop();
     return;
   }
-  if (!isRunning) { currentIndex = 0; totalPracticeMs = 0; }
+  if (!isRunning) { currentIndex = 0; totalPracticeMs = 0; practicedById = {}; }
   startCurrentSection();
 }
 
@@ -1904,6 +1990,8 @@ function startTickLoop() {
     lastTick = now;
     remainingSeconds -= elapsedMs / 1000;
     totalPracticeMs += elapsedMs;
+    const curU = units[currentIndex];
+    if (curU) practicedById[curU.id] = (practicedById[curU.id] || 0) + elapsedMs;
 
     const secondsLeft = Math.ceil(remainingSeconds);
     if (secondsLeft <= 3 && secondsLeft > 0 && secondsLeft !== lastBeepSecond) {
@@ -1951,6 +2039,7 @@ function resetTimerState() {
   releaseWakeLock();
 }
 function stopTimer() {
+  if (isRunning || isPaused) recordSession();
   resetTimerState();
   totalPracticeMs = 0;
   afterStateChange();
@@ -1967,12 +2056,13 @@ function jumpToSection(idx) {
   if (!units[idx]) return;
   ensureAudioCtx();
   currentIndex = idx;
-  if (!isRunning && !isPaused) totalPracticeMs = 0;
+  if (!isRunning && !isPaused) { totalPracticeMs = 0; practicedById = {}; }
   startCurrentSection();
 }
 
 function finishPractice() {
   const practiced = totalPracticeMs;
+  recordSession();
   resetTimerState();
   afterStateChange();
   document.getElementById('celebrationSub').textContent = t('complete') + ' · ' + fmtTime(practiced / 1000);
@@ -2080,6 +2170,7 @@ function updateUnit(id, key, value, rerender) {
     else u.cycle = Object.assign({ start: 0, mode: 'manual', bars: 4 }, u.cycle || {}, { semi: parseInt(value, 10) });
   }
   else if (key === 'focus') { u.focus = value === '' ? null : clampInt(value, 10, 300); }
+  else if (key === 'cycleDir' && u.cycle) u.cycle.dir = value === '-1' ? -1 : 1;
   else if (key === 'cycleStart' && u.cycle) u.cycle.start = parseInt(value, 10);
   else if (key === 'cycleMode' && u.cycle) u.cycle.mode = value;
   else if (key === 'cycleBars' && u.cycle) u.cycle.bars = clampInt(value, 1, 64);
@@ -2091,7 +2182,7 @@ function updateUnit(id, key, value, rerender) {
 }
 
 function cycleTag(c) {
-  return '🔁 ' + t('intervalsShort')[c.semi] + ' · ' + t('from') + ' ' + noteName(c.start || 0);
+  return '🔁 ' + t('intervalsShort')[c.semi] + (c.dir === -1 ? ' ↓' : ' ↑') + ' · ' + t('from') + ' ' + noteName(c.start || 0);
 }
 function renderUnits() {
   const list = document.getElementById('unitsList');
@@ -2142,12 +2233,15 @@ function renderUnits() {
         '</select></label>' +
         '<label class="field"><span>🔁 ' + esc(t('cycle')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleSemi\',this.value,true)">' + semiOpts + '</select></label>';
       if (c) {
-        html += '<label class="field"><span>' + esc(t('startKey')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleStart\',this.value,true)">' + keyOpts + '</select></label>' +
+        html += '<label class="field"><span>' + esc(t('dirLabel')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleDir\',this.value,true)">' +
+            '<option value="1"' + (c.dir !== -1 ? ' selected' : '') + '>' + esc(t('dirUp')) + '</option>' +
+            '<option value="-1"' + (c.dir === -1 ? ' selected' : '') + '>' + esc(t('dirDown')) + '</option></select></label>' +
+          '<label class="field"><span>' + esc(t('startKey')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleStart\',this.value,true)">' + keyOpts + '</select></label>' +
           '<label class="field"><span>' + esc(t('cycleMode')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleMode\',this.value,true)">' + modeOpts + '</select></label>';
         if (c.mode === 'bars') {
           html += '<label class="field"><span>' + esc(t('barsPerKey')) + '</span><input type="number" min="1" max="64" inputmode="numeric" value="' + (c.bars || 4) + '" onchange="updateUnit(' + u.id + ',\'cycleBars\',this.value,true)"></label>';
         }
-        const seq = keySequence(c.semi, c.start || 0);
+        const seq = keySequence(c.semi, c.start || 0, c.dir);
         html += '<div class="field full"><span>' + seq.seq.map((pc, j) => (j > 0 && seq.groupLen < 12 && j % seq.groupLen === 0 ? ' | ' : (j > 0 ? ' · ' : '')) + esc(noteName(pc))).join('') + '</span></div>';
       }
       html += '</div>';
@@ -2463,6 +2557,255 @@ function renderProfile() {
 }
 
 // =====================================================================
+// Practice log (what was practiced, how long)
+// =====================================================================
+function getLog() { try { return JSON.parse(localStorage.getItem('ppLog') || '[]'); } catch (e) { return []; } }
+function setLog(log) { localStorage.setItem('ppLog', JSON.stringify(log.slice(-1000))); }
+function recordSession() {
+  if (totalPracticeMs < 60000) return;
+  const entry = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    preset: presetDisplayName() || '',
+    totalSec: Math.round(totalPracticeMs / 1000),
+    units: units.map((u, i) => ({ name: displayName(u, i), plannedMin: u.minutes, practicedSec: Math.round((practicedById[u.id] || 0) / 1000) }))
+      .filter(x => x.practicedSec > 0)
+  };
+  const log = getLog(); log.push(entry); setLog(log);
+  lastSession = entry;
+  renderLog();
+}
+function fmtMin(sec) {
+  if (sec < 60) return fmtTime(sec);
+  const m = Math.round(sec / 60);
+  if (m < 60) return m + ' ' + t('min');
+  return Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') + ' ' + t('min');
+}
+function sumSince(log, ms) { const from = Date.now() - ms; const l = log.filter(e => new Date(e.date).getTime() >= from); return { sec: l.reduce((a, e) => a + e.totalSec, 0), n: l.length }; }
+function startOfToday() { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }
+function renderLog() {
+  const log = getLog();
+  const todayL = log.filter(e => new Date(e.date).getTime() >= startOfToday());
+  const stats = [
+    [t('today'), { sec: todayL.reduce((a, e) => a + e.totalSec, 0), n: todayL.length }],
+    [t('last7'), sumSince(log, 7 * 864e5)],
+    [t('last30'), sumSince(log, 30 * 864e5)]
+  ];
+  document.getElementById('logStats').innerHTML = stats.map(([l, v]) =>
+    '<div class="log-stat"><span>' + esc(l) + '</span><b>' + esc(fmtMin(v.sec)) + '</b><span>' + esc((v.n === 1 ? t('sessions1') : t('sessionsN', { n: v.n }))) + '</span></div>').join('');
+  const list = document.getElementById('logList');
+  if (!log.length) { list.innerHTML = '<div class="log-empty">' + esc(t('noSessions')) + '</div>'; return; }
+  list.innerHTML = log.slice(-50).reverse().map(e =>
+    '<details class="log-item"><summary><span class="l-date">' + esc(fmtDate(e.date)) + '</span><span class="l-name">' + esc(e.preset || '–') + '</span><span class="l-total">' + esc(fmtMin(e.totalSec)) + '</span></summary>' +
+    '<div class="log-body"><ul>' + e.units.map(u => '<li><span>' + esc(u.name) + '</span><span>' + esc(fmtMin(u.practicedSec)) + ' / ' + u.plannedMin + ' ' + esc(t('min')) + '</span></li>').join('') + '</ul>' +
+    '<div class="log-actions"><button class="btn btn-blue btn-small" onclick="shareSessionById(' + e.id + ')">📤 ' + esc(t('shareImage')) + '</button>' +
+    '<button class="btn btn-red btn-small" onclick="deleteLogEntry(' + e.id + ')">✕ ' + esc(t('delete')) + '</button></div></div></details>').join('');
+}
+function deleteLogEntry(id) {
+  if (!confirm(t('confirmDeleteEntry'))) return;
+  setLog(getLog().filter(e => e.id !== id)); renderLog();
+}
+function shareSessionById(id) { const e = getLog().find(x => x.id === id); if (e) shareSessionImage(e); }
+
+// ---- Export / import
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+function dateStamp() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function exportCsv() {
+  const sep = ';', dec = lang === 'de' ? ',' : '.';
+  const q = v => { v = String(v == null ? '' : v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const rows = [t('csvHeader')];
+  getLog().forEach(e => {
+    const d = new Date(e.date);
+    const day = d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB'), time = d.toLocaleTimeString(lang === 'de' ? 'de-DE' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+    e.units.forEach(u => rows.push([day, time, e.preset, u.name, u.plannedMin, (u.practicedSec / 60).toFixed(1).replace('.', dec)]));
+  });
+  const csv = '\uFEFF' + rows.map(r => r.map(q).join(sep)).join('\r\n');
+  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'practice-pal-' + dateStamp() + '.csv');
+}
+const BACKUP_KEYS = ['practicePresets', 'practiceDefault', 'ppProfile', 'ppChecklist', 'ppSettings', 'ppMetro', 'ppLog', 'ppLang'];
+function exportBackup() {
+  const data = {};
+  BACKUP_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+  const json = JSON.stringify({ app: 'practice-pal', version: 1, exported: new Date().toISOString(), data }, null, 1);
+  downloadBlob(new Blob([json], { type: 'application/json' }), 'practice-pal-backup-' + dateStamp() + '.json');
+}
+function importBackup(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let b;
+    try { b = JSON.parse(reader.result); } catch (e) { b = null; }
+    if (!b || b.app !== 'practice-pal' || typeof b.data !== 'object') { alert(t('importError')); return; }
+    if (!confirm(t('importConfirm', { d: b.exported ? fmtDate(b.exported) : '?' }))) return;
+    BACKUP_KEYS.forEach(k => { if (typeof b.data[k] === 'string') localStorage.setItem(k, b.data[k]); else localStorage.removeItem(k); });
+    location.reload();
+  };
+  reader.readAsText(file);
+}
+
+// =====================================================================
+// Share as image (canvas 1080x1350, drawn synchronously so that
+// navigator.share still runs inside the user's tap on iOS)
+// =====================================================================
+const IMG_W = 1080, IMG_H = 1350;
+const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+function imgCanvas() {
+  const c = document.createElement('canvas'); c.width = IMG_W; c.height = IMG_H;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, IMG_W, IMG_H);
+  g.addColorStop(0, '#0a0a14'); g.addColorStop(0.5, '#131329'); g.addColorStop(1, '#1c1d3a');
+  x.fillStyle = g; x.fillRect(0, 0, IMG_W, IMG_H);
+  x.fillStyle = '#ffd700'; x.font = '800 44px ' + FONT; x.textBaseline = 'alphabetic';
+  x.fillText('♫ Practice Pal', 70, 110);
+  x.fillStyle = '#a0a3bd'; x.font = '500 26px ' + FONT;
+  x.fillText('practice-pal-wheat.vercel.app', 70, IMG_H - 60);
+  return [c, x];
+}
+function fitText(x, s, maxW) {
+  if (x.measureText(s).width <= maxW) return s;
+  while (s.length > 1 && x.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+  return s + '…';
+}
+function rrect(x, X, Y, W, H, r) {
+  x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r);
+  x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath();
+}
+function dataUrlToBlob(url) {
+  const [head, b64] = url.split(','); const bin = atob(b64); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: head.slice(5, head.indexOf(';')) });
+}
+function shareCanvas(c, name, text) {
+  const blob = dataUrlToBlob(c.toDataURL('image/png'));
+  let file = null;
+  try { file = new File([blob], name, { type: 'image/png' }); } catch (e) {}
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: 'Practice Pal', text }).catch(err => { if (err && err.name !== 'AbortError') downloadBlob(blob, name); });
+  } else downloadBlob(blob, name);
+  return c;
+}
+function shareSessionImage(e) {
+  if (!e) e = getLog().slice(-1)[0];
+  if (!e) { alert(t('noSessions')); return; }
+  const [c, x] = imgCanvas();
+  x.fillStyle = '#fff'; x.font = '800 64px ' + FONT; x.fillText(t('sessionTitle'), 70, 210);
+  x.fillStyle = '#a0a3bd'; x.font = '500 32px ' + FONT; x.fillText(fmtDate(e.date) + (e.preset ? ' · ' + fitText(x, e.preset, 560) : ''), 70, 262);
+  // total box
+  rrect(x, 70, 310, IMG_W - 140, 190, 28); x.fillStyle = 'rgba(255,255,255,0.06)'; x.fill();
+  x.fillStyle = '#ffd700'; x.font = '800 110px ' + FONT; x.textAlign = 'center';
+  x.fillText(fmtMin(e.totalSec), IMG_W / 2, 440); x.textAlign = 'left';
+  x.fillStyle = '#a0a3bd'; x.font = '600 28px ' + FONT; x.textAlign = 'center'; x.fillText(t('practicedLabel').toUpperCase(), IMG_W / 2, 482); x.textAlign = 'left';
+  // units
+  const list = e.units.slice(0, 10);
+  const maxSec = Math.max(60, ...list.map(u => u.practicedSec));
+  let y = 570;
+  const rowH = Math.min(68, (IMG_H - 140 - y) / Math.max(1, list.length));
+  list.forEach((u, i) => {
+    const col = PIE_COLORS[i % PIE_COLORS.length];
+    x.fillStyle = '#fff'; x.font = '600 30px ' + FONT;
+    x.fillText(fitText(x, u.name, 640), 70, y + 28);
+    x.fillStyle = col; x.font = '800 30px ' + FONT; x.textAlign = 'right';
+    x.fillText(fmtMin(u.practicedSec), IMG_W - 70, y + 28); x.textAlign = 'left';
+    rrect(x, 70, y + 40, IMG_W - 140, 12, 6); x.fillStyle = 'rgba(255,255,255,0.08)'; x.fill();
+    rrect(x, 70, y + 40, Math.max(12, (IMG_W - 140) * u.practicedSec / maxSec), 12, 6); x.fillStyle = col; x.fill();
+    y += rowH;
+  });
+  if (e.units.length > 10) { x.fillStyle = '#a0a3bd'; x.font = '500 26px ' + FONT; x.fillText('+ ' + (e.units.length - 10), 70, y + 24); }
+  return shareCanvas(c, 'practice-pal-session-' + dateStamp() + '.png', t('sessionTitle') + ': ' + fmtMin(e.totalSec));
+}
+function shareWeekImage() {
+  const log = getLog();
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+    const from = d.getTime(), to = from + 864e5;
+    const l = log.filter(e => { const tm = new Date(e.date).getTime(); return tm >= from && tm < to; });
+    days.push({ d, sec: l.reduce((a, e) => a + e.totalSec, 0), n: l.length });
+  }
+  const total = days.reduce((a, d) => a + d.sec, 0), sessions = days.reduce((a, d) => a + d.n, 0);
+  const [c, x] = imgCanvas();
+  x.fillStyle = '#fff'; x.font = '800 64px ' + FONT; x.fillText(t('weekTitle'), 70, 210);
+  x.fillStyle = '#a0a3bd'; x.font = '500 32px ' + FONT;
+  x.fillText(days[0].d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB') + ' – ' + days[6].d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB'), 70, 262);
+  rrect(x, 70, 310, IMG_W - 140, 190, 28); x.fillStyle = 'rgba(255,255,255,0.06)'; x.fill();
+  x.textAlign = 'center';
+  x.fillStyle = '#ffd700'; x.font = '800 110px ' + FONT; x.fillText(fmtMin(total), IMG_W / 2, 440);
+  x.fillStyle = '#a0a3bd'; x.font = '600 28px ' + FONT; x.fillText((t('totalLabel') + ' · ' + (sessions === 1 ? t('sessions1') : t('sessionsN', { n: sessions }))).toUpperCase(), IMG_W / 2, 482);
+  // bars
+  const top = 600, bottom = 1150, maxSec = Math.max(1800, ...days.map(d => d.sec));
+  const slot = (IMG_W - 140) / 7, bw = slot * 0.6;
+  days.forEach((d, i) => {
+    const cx = 70 + slot * i + slot / 2;
+    const h = (bottom - top) * d.sec / maxSec;
+    rrect(x, cx - bw / 2, top, bw, bottom - top, 16); x.fillStyle = 'rgba(255,255,255,0.05)'; x.fill();
+    if (h > 0) { rrect(x, cx - bw / 2, bottom - Math.max(h, 16), bw, Math.max(h, 16), 16); x.fillStyle = i === 6 ? '#ffd700' : '#00d97e'; x.fill(); }
+    x.fillStyle = '#fff'; x.font = '700 26px ' + FONT;
+    if (d.sec > 0) x.fillText(Math.round(d.sec / 60) + '′', cx, bottom - Math.max(h, 16) - 14);
+    x.fillStyle = '#a0a3bd'; x.font = '600 28px ' + FONT; x.fillText(t('days')[d.d.getDay()], cx, bottom + 44);
+  });
+  x.textAlign = 'left';
+  return shareCanvas(c, 'practice-pal-week-' + dateStamp() + '.png', t('weekTitle') + ': ' + fmtMin(total));
+}
+function shareProfileImage() {
+  const p = getProfile();
+  const [c, x] = imgCanvas();
+  x.fillStyle = '#fff'; x.font = '800 64px ' + FONT; x.fillText(t('profile'), 70, 210);
+  x.fillStyle = '#a0a3bd'; x.font = '500 32px ' + FONT; x.fillText(fmtDate(new Date().toISOString()), 70, 262);
+  const cx = IMG_W / 2, cy = 700, R = 300, n = p.cats.length, TAU = Math.PI * 2;
+  for (let k = 2; k <= 10; k += 2) {
+    x.beginPath(); x.arc(cx, cy, R * k / 10, 0, TAU);
+    x.strokeStyle = 'rgba(255,255,255,' + (k === 10 ? 0.4 : 0.12) + ')'; x.lineWidth = 2;
+    x.setLineDash(k === 10 ? [] : [4, 8]); x.stroke();
+  }
+  x.setLineDash([]);
+  const snap = p.cmp >= 0 ? p.snaps[p.cmp] : null;
+  p.cats.forEach((cat, i) => {
+    const a0 = -Math.PI / 2 + i * TAU / n, a1 = a0 + TAU / n, am = (a0 + a1) / 2;
+    const col = PIE_COLORS[i % PIE_COLORS.length], r = R * cat.score / 10;
+    if (r > 0) {
+      x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, r, a0, a1); x.closePath();
+      x.globalAlpha = 0.75; x.fillStyle = col; x.fill(); x.globalAlpha = 1;
+      x.strokeStyle = col; x.lineWidth = 3; x.stroke();
+    }
+    x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + R * Math.cos(a0), cy + R * Math.sin(a0));
+    x.strokeStyle = 'rgba(255,255,255,0.25)'; x.lineWidth = 2; x.stroke();
+    if (snap && cat.name.trim() && snap.scores[cat.name.trim()] !== undefined) {
+      const rs = Math.max(2, R * snap.scores[cat.name.trim()] / 10);
+      x.beginPath(); x.arc(cx, cy, rs, a0, a1); x.setLineDash([12, 10]); x.strokeStyle = '#fff'; x.lineWidth = 4; x.stroke(); x.setLineDash([]);
+    }
+    const ca = Math.cos(am), sa = Math.sin(am);
+    const lx = cx + (R + 30) * ca, ly = cy + (R + 30) * sa + (sa > 0.3 ? 26 : (sa < -0.3 ? -4 : 10));
+    x.textAlign = ca > 0.25 ? 'left' : (ca < -0.25 ? 'right' : 'center');
+    x.font = '700 30px ' + FONT;
+    const label = fitText(x, (cat.name || '–').trim() || '–', 230);
+    const scoreTxt = ' ' + cat.score;
+    const lw = x.measureText(label).width, sw = x.measureText(scoreTxt).width;
+    let sx = lx;
+    if (x.textAlign === 'right') sx = lx - sw; else if (x.textAlign === 'center') sx = lx - (lw + sw) / 2;
+    x.textAlign = 'left';
+    x.fillStyle = '#fff'; x.fillText(label, sx, ly);
+    x.fillStyle = col; x.font = '800 30px ' + FONT; x.fillText(scoreTxt, sx + lw, ly);
+  });
+  x.beginPath(); x.arc(cx, cy, 6, 0, TAU); x.fillStyle = '#fff'; x.fill();
+  x.textAlign = 'center'; x.font = '600 30px ' + FONT;
+  const named = p.cats.filter(c2 => c2.name.trim());
+  if (named.length) {
+    const avg = named.reduce((a, c2) => a + c2.score, 0) / named.length;
+    x.fillStyle = '#ffd700'; x.fillText('Ø ' + avg.toFixed(1).replace('.', lang === 'de' ? ',' : '.') + ' / 10', cx, 1130);
+  }
+  if (snap) { x.fillStyle = '#a0a3bd'; x.font = '500 26px ' + FONT; x.fillText(t('dashedFrom', { d: fmtDate(snap.date) }), cx, 1180); }
+  x.textAlign = 'left';
+  return shareCanvas(c, 'practice-pal-profil-' + dateStamp() + '.png', t('profile'));
+}
+
+// =====================================================================
 // Language & static texts
 // =====================================================================
 function setLang(l) {
@@ -2521,6 +2864,7 @@ function renderAll() {
   renderFocus(false);
   renderMetroStatus();
   renderProfile();
+  renderLog();
 }
 
 function toggleSection(id) { document.getElementById(id).classList.toggle('collapsed'); }
