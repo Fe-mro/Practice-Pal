@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Practice Pal - Music Practice Timer</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a14">
+<title>Practice Pal – Übungstimer für Musiker</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -21,1010 +23,1179 @@
     --text: #ffffff;
     --text-dim: #a0a3bd;
     --card: rgba(255, 255, 255, 0.06);
-    --card-border: rgba(255, 255, 255, 0.08);
+    --card-2: rgba(255, 255, 255, 0.04);
+    --card-border: rgba(255, 255, 255, 0.09);
+    --radius: 16px;
   }
 
-  html, body {
-    height: 100%;
-    overflow-x: hidden;
-  }
+  html { -webkit-text-size-adjust: 100%; }
+  html, body { min-height: 100%; overflow-x: hidden; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%) fixed;
     color: var(--text);
     min-height: 100vh;
-    padding: 16px;
-    padding-bottom: 40px;
+    padding: calc(12px + env(safe-area-inset-top)) 14px 40px;
     -webkit-font-smoothing: antialiased;
+    line-height: 1.4;
   }
 
-  .container {
-    max-width: 600px;
-    margin: 0 auto;
-  }
+  button, input, select, textarea { font: inherit; color: inherit; }
 
-  h1 {
-    text-align: center;
-    color: var(--gold);
-    font-size: 1.9em;
-    margin: 10px 0 4px;
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
-    letter-spacing: 1px;
-    font-weight: 800;
-  }
-
-  .subtitle {
-    text-align: center;
-    color: var(--text-dim);
-    font-size: 0.85em;
-    margin-bottom: 24px;
-    letter-spacing: 0.5px;
-  }
-
-  /* Collapsible section */
-  .section {
-    background: var(--card);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 18px;
-    margin-bottom: 16px;
-    border: 1px solid var(--card-border);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .section-header {
+  /* ===== Header ===== */
+  .app-header {
+    max-width: 1200px;
+    margin: 0 auto 14px;
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
+    gap: 12px;
   }
-
-  .section-header h2 {
+  .brand h1 {
     color: var(--gold);
-    font-size: 1.1em;
-    font-weight: 700;
+    font-size: 1.6em;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
     letter-spacing: 0.5px;
+    font-weight: 800;
+    line-height: 1.1;
   }
+  .subtitle { color: var(--text-dim); font-size: 0.85em; }
 
-  .section-header .toggle-icon {
-    color: var(--text-dim);
-    font-size: 1.1em;
-    transition: transform 0.3s ease;
-  }
-
-  .section.collapsed .toggle-icon { transform: rotate(-90deg); }
-  .section.collapsed .section-body { display: none; }
-
-  .section-body { margin-top: 14px; }
-
-  /* Preset controls */
-  .preset-controls {
+  .lang-switch {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    padding: 3px;
+    flex-shrink: 0;
   }
-
-  .preset-select, .preset-name-input {
-    flex: 1;
-    min-width: 140px;
-    padding: 11px 14px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 215, 0, 0.2);
-    background: rgba(0, 0, 0, 0.3);
-    color: var(--text);
-    font-size: 0.95em;
-    font-family: inherit;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-
-  .preset-select {
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 18px;
-    padding-right: 36px;
-  }
-
-  .preset-select option {
-    background: var(--bg-2);
-    color: var(--text);
-  }
-
-  .preset-select:focus, .preset-name-input:focus {
-    outline: none;
-    border-color: var(--gold);
-  }
-
-  /* Buttons */
-  .btn {
-    padding: 12px 18px;
-    border: none;
-    border-radius: 12px;
-    font-size: 0.95em;
-    font-weight: 600;
+  .lang-switch button {
+    border: 0;
+    background: transparent;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85em;
+    color: var(--text-dim);
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
+    min-height: 36px;
+  }
+  .lang-switch button.active { background: var(--gold); color: #1a1a1a; }
+
+  /* ===== Layout ===== */
+  .layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* ===== Buttons ===== */
+  .btn {
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 1em;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    letter-spacing: 0.3px;
     min-height: 44px;
+    transition: transform 0.08s ease, filter 0.15s ease, background 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
   }
-
   .btn:active { transform: scale(0.97); }
-
-  .btn-gold {
-    background: linear-gradient(135deg, var(--gold), var(--gold-2));
-    color: #1a1a2e;
-    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.25);
-  }
-
-  .btn-red {
-    background: linear-gradient(135deg, var(--red), #c0392b);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.25);
-  }
-
-  .btn-green {
-    background: linear-gradient(135deg, var(--green), #00b765);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(0, 217, 126, 0.25);
-  }
-
-  .btn-blue {
-    background: linear-gradient(135deg, var(--blue), #2563eb);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(77, 139, 255, 0.25);
-  }
-
-  .btn-ghost {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .btn-small { padding: 8px 12px; font-size: 0.85em; min-height: 36px; }
-
+  .btn:hover { filter: brightness(1.08); }
+  .btn-green { background: var(--green); color: #062b1c; }
+  .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: #1a1a1a; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-blue { background: var(--blue); color: #fff; }
+  .btn-ghost { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--card-border); }
+  .btn-small { padding: 8px 12px; font-size: 0.85em; min-height: 38px; border-radius: 10px; }
   .btn-block { width: 100%; }
-
-  /* Practice fields */
-  .fields-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-
-  .practice-field {
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 14px;
-    padding: 14px;
-    border: 1.5px solid rgba(255, 255, 255, 0.08);
-    transition: all 0.3s ease;
-    position: relative;
-  }
-
-  .practice-field.current {
-    border-color: var(--gold);
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
-    animation: pulse-border 2s infinite;
-  }
-
-  .practice-field.completed {
-    border-color: var(--green);
-    opacity: 0.55;
-  }
-
-  @keyframes pulse-border {
-    0%, 100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.3); }
-    50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.6); }
-  }
-
-  .field-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .field-number {
-    background: linear-gradient(135deg, var(--gold), var(--gold-2));
-    color: #1a1a2e;
-    padding: 2px 10px;
-    border-radius: 8px;
-    font-size: 0.75em;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-  }
-
-  .field-inputs {
-    display: grid;
-    grid-template-columns: 1fr 90px;
-    gap: 8px;
-  }
-
-  .practice-field input {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.3);
-    color: var(--text);
-    font-size: 0.95em;
-    font-family: inherit;
-    min-height: 40px;
-  }
-
-  .practice-field input:focus {
-    outline: none;
-    border-color: var(--gold);
-  }
-
-  .remove-btn {
-    background: rgba(255, 71, 87, 0.15);
-    border: none;
-    color: var(--red);
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 1.1em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-  }
-
-  .remove-btn:active { background: rgba(255, 71, 87, 0.4); }
-
-  /* Timer section (the hero) */
-  .timer-section {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 170, 0, 0.04));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 24px;
-    padding: 26px 18px;
-    margin-bottom: 16px;
-    border: 1.5px solid rgba(255, 215, 0, 0.25);
-    text-align: center;
-    box-shadow: 0 8px 40px rgba(255, 215, 0, 0.1);
-  }
-
-  .current-practice-label {
-    font-size: 0.85em;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-  }
-
-  .screen-on-reminder {
-    display: inline-block;
-    font-size: 0.7em;
-    color: var(--gold);
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    border-radius: 8px;
-    padding: 3px 10px;
-    margin-bottom: 10px;
-    letter-spacing: 0.5px;
-    animation: gentle-pulse 2.5s ease-in-out infinite;
-  }
-
-  @keyframes gentle-pulse {
-    0%, 100% { opacity: 0.7; }
-    50% { opacity: 1; }
-  }
-
-  .current-practice {
-    font-size: 1.5em;
-    color: var(--gold);
-    margin-bottom: 16px;
-    min-height: 36px;
-    font-weight: 700;
-    line-height: 1.2;
-    padding: 0 8px;
-  }
-
-  .countdown {
-    font-size: 3.85em;
-    font-weight: 800;
-    color: #fff;
-    margin: 10px 0;
-    font-family: -apple-system, 'SF Mono', 'Courier New', monospace;
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
-    transition: color 0.3s ease, transform 0.3s ease;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .countdown.motivating {
-    color: var(--green);
-    animation: gentle-glow 1.2s ease-in-out infinite;
-  }
-
-  .countdown.critical {
-    color: var(--green);
-  }
-
-  .countdown-emoji {
-    display: inline-block;
-    font-size: 0.5em;
-    margin-left: 12px;
-    vertical-align: middle;
-    animation: emoji-bounce 0.5s ease-in-out;
-  }
-
-  @keyframes gentle-glow {
-    0%, 100% { text-shadow: 0 0 20px rgba(0, 217, 126, 0.3); }
-    50% { text-shadow: 0 0 35px rgba(0, 217, 126, 0.6); }
-  }
-
-  @keyframes emoji-bounce {
-    0% { transform: scale(0); opacity: 0; }
-    50% { transform: scale(1.4); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-
-  .inline-total {
-    display: inline-block;
-    text-align: center;
-    margin-top: 4px;
-    margin-bottom: 16px;
-    padding: 8px 18px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 215, 0, 0.2);
-    border-radius: 12px;
-  }
-
-  .inline-total-label {
-    color: var(--text-dim);
-    font-size: 0.7em;
-    margin-bottom: 2px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .inline-total-time {
-    font-size: 1.4em;
-    font-weight: 700;
-    color: var(--gold);
-    font-family: -apple-system, 'SF Mono', monospace;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .progress-bar-container {
-    width: 100%;
-    height: 8px;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 4px;
-    margin: 16px 0 20px;
-    overflow: hidden;
-  }
-
-  .progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--gold), var(--gold-2));
-    border-radius: 4px;
-    transition: width 0.3s linear;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-  }
-
-  .timer-controls {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 10px;
-  }
-
-  .timer-controls .btn {
-    padding: 14px 16px;
-    font-size: 1em;
-  }
-
-  .secondary-controls {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .secondary-controls .btn { flex: 1; }
-
-  .section-jumper {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 16px;
-  }
-
-  .section-jumper .btn {
-    padding: 8px 12px;
-    font-size: 0.8em;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 36px;
-    border-radius: 10px;
-  }
-
-  .section-jumper .btn.active-jump {
-    background: rgba(255, 215, 0, 0.2);
-    border-color: var(--gold);
-    color: var(--gold);
-  }
-
-  /* Metronome (slim card) */
-  .metronome {
-    background: var(--card);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 18px;
-    padding: 14px 18px;
-    margin-bottom: 16px;
+  .icon-btn {
     border: 1px solid var(--card-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .metronome-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-  }
-
-  .metronome-title {
-    color: var(--gold);
-    font-weight: 700;
-    font-size: 0.95em;
-    letter-spacing: 0.5px;
-  }
-
-  .metronome-toggle {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-  }
-
-  .metronome-toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .toggle-slider {
-    position: absolute;
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    transition: 0.3s;
-  }
-
-  .toggle-slider::before {
-    content: "";
-    position: absolute;
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: 0.3s;
-  }
-
-  .metronome-toggle input:checked + .toggle-slider {
-    background: linear-gradient(135deg, var(--green), #00b765);
-  }
-
-  .metronome-toggle input:checked + .toggle-slider::before {
-    transform: translateX(20px);
-  }
-
-  .metronome-body {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .bpm-display {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
+    font-size: 1em;
     flex-shrink: 0;
   }
+  .icon-btn:hover { background: rgba(255,255,255,0.12); }
+  .icon-btn.danger:hover { background: rgba(255,71,87,0.25); }
+  .icon-btn.on { background: rgba(255,215,0,0.18); border-color: rgba(255,215,0,0.5); }
 
-  #bpmValue {
-    font-size: 1.6em;
-    font-weight: 800;
-    color: var(--gold);
-    font-variant-numeric: tabular-nums;
-    min-width: 50px;
-    text-align: right;
-  }
-
-  .bpm-label {
-    font-size: 0.7em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .bpm-slider {
-    flex: 1;
-    min-width: 100px;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 3px;
+  /* ===== Inputs ===== */
+  input[type=text], input[type=number], select, textarea {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 16px; /* prevents iOS zoom */
+    min-height: 42px;
+    width: 100%;
     outline: none;
   }
+  textarea { resize: vertical; min-height: 64px; line-height: 1.35; }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+  select option, select optgroup { background: #1c1d3a; color: #fff; }
+  label.field { display: flex; flex-direction: column; gap: 4px; font-size: 0.8em; color: var(--text-dim); }
 
-  .bpm-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, var(--gold), var(--gold-2));
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+  /* ===== Timer ===== */
+  .timer-card { text-align: center; padding: 18px 16px; }
+  .screen-on { font-size: 0.75em; color: var(--text-dim); margin-bottom: 8px; }
+  .current-label { color: var(--text-dim); font-size: 0.8em; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .current-practice {
+    font-size: 1.35em; color: var(--gold); font-weight: 800; line-height: 1.2;
+    margin: 6px 0 4px; min-height: 1.2em; word-break: break-word;
   }
-
-  .bpm-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, var(--gold), var(--gold-2));
-    border-radius: 50%;
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+  .current-tip { color: var(--text-dim); font-size: 0.85em; max-width: 520px; margin: 0 auto; min-height: 0; }
+  .countdown {
+    font-size: 4.2em; font-weight: 800; margin: 10px 0 6px;
+    font-family: -apple-system, 'SF Mono', 'Menlo', monospace;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+    line-height: 1; font-variant-numeric: tabular-nums;
   }
+  .countdown.motivating { color: var(--green); animation: gentle-glow 1.2s ease-in-out infinite; }
+  .countdown-emoji { display: inline-block; font-size: 0.5em; margin-left: 12px; vertical-align: middle; animation: emoji-bounce 0.5s ease-in-out; }
+  @keyframes gentle-glow { 0%,100% { text-shadow: 0 0 20px rgba(0,217,126,0.3); } 50% { text-shadow: 0 0 35px rgba(0,217,126,0.6); } }
+  @keyframes emoji-bounce { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.4); opacity: 1; } 100% { transform: scale(1); } }
 
-  .bpm-range {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.7em;
-    color: var(--text-dim);
-    width: 100%;
-    margin-top: -4px;
-    padding: 0 2px;
+  .progress { height: 8px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; margin: 8px 0 10px; }
+  .progress > div { height: 100%; width: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); transition: width 0.3s linear; }
+  .total { color: var(--text-dim); font-size: 0.85em; }
+  .total b { color: #fff; font-variant-numeric: tabular-nums; margin-left: 4px; }
+
+  /* Key cycle */
+  .keycycle {
+    margin: 14px 0 4px;
+    background: rgba(77,139,255,0.10);
+    border: 1px solid rgba(77,139,255,0.35);
+    border-radius: 14px;
+    padding: 12px;
   }
+  .kc-head { display: flex; justify-content: space-between; font-size: 0.78em; color: var(--text-dim); gap: 8px; text-align: left; }
+  .kc-main { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 4px 0 8px; }
+  .kc-key { font-size: 3.4em; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 0 24px rgba(77,139,255,0.7); min-width: 1.6em; }
+  .kc-key.pop { animation: key-pop 0.3s ease-out; }
+  @keyframes key-pop { 0% { transform: scale(0.7); opacity: 0.4; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+  .kc-next { color: var(--text-dim); font-size: 0.9em; text-align: left; }
+  .kc-next b { color: #fff; font-size: 1.3em; display: block; }
+  .kc-chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .kc-chip { min-width: 34px; padding: 4px 6px; border-radius: 8px; font-size: 0.8em; font-weight: 700; background: rgba(255,255,255,0.06); color: var(--text-dim); }
+  .kc-chip.done { background: rgba(0,217,126,0.18); color: var(--green); }
+  .kc-chip.now { background: var(--blue); color: #fff; }
+  .kc-sep { width: 8px; }
+  .kc-hint { font-size: 0.75em; color: var(--gold); margin-top: 8px; }
 
-  .volume-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+  .controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+  .controls .btn { min-width: 96px; }
+  .section-jumper { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; }
+  .section-jumper button {
+    border: 1px solid var(--card-border); background: rgba(255,255,255,0.05); color: var(--text-dim);
+    border-radius: 99px; padding: 5px 10px; font-size: 0.75em; cursor: pointer; max-width: 180px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .section-jumper button.active { background: rgba(255,215,0,0.18); color: var(--gold); border-color: rgba(255,215,0,0.5); }
+  .section-jumper button.done { color: var(--green); }
+  .shortcuts { margin-top: 12px; font-size: 0.72em; color: var(--text-dim); }
+  kbd { background: rgba(255,255,255,0.1); border-radius: 4px; padding: 1px 5px; font-family: inherit; font-size: 0.95em; }
 
-  .volume-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text);
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    font-size: 1.1em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  /* ===== Metronome ===== */
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card-title { font-weight: 800; font-size: 1.05em; }
+  .switch { position: relative; width: 54px; height: 30px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: rgba(255,255,255,0.15); border-radius: 99px; cursor: pointer; transition: 0.2s; }
+  .switch span::before { content: ''; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+  .switch input:checked + span { background: var(--green); }
+  .switch input:checked + span::before { transform: translateX(24px); }
 
-  .volume-btn:active { background: rgba(255, 215, 0, 0.2); }
+  .bpm-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 6px; }
+  .bpm-display { text-align: center; min-width: 96px; }
+  .bpm-display b { font-size: 2.6em; font-weight: 800; color: var(--gold); line-height: 1; font-variant-numeric: tabular-nums; display: block; }
+  .bpm-display small { color: var(--text-dim); font-size: 0.75em; letter-spacing: 1px; }
+  .bpm-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 99px; background: rgba(255,255,255,0.12); outline: none; margin: 8px 0; }
+  .bpm-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: var(--gold); cursor: pointer; box-shadow: 0 0 10px rgba(255,215,0,0.5); }
+  .bpm-slider::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: var(--gold); cursor: pointer; border: 0; }
 
-  .volume-bar-container {
-    width: 60px;
-    height: 6px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 3px;
-    overflow: hidden;
-  }
+  .beat-dots { display: flex; gap: 8px; justify-content: center; margin: 8px 0 4px; min-height: 18px; }
+  .beat-dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: background 0.06s, transform 0.06s; }
+  .beat-dot.accent { border: 2px solid rgba(255,215,0,0.6); }
+  .beat-dot.hit { background: var(--gold); transform: scale(1.25); }
+  .beat-dot.hit.muted { background: rgba(160,163,189,0.7); }
+  .metro-status { text-align: center; font-size: 0.8em; color: var(--text-dim); min-height: 1.3em; }
+  .metro-status.muted { color: var(--gold); font-weight: 700; }
 
-  .volume-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--gold), var(--gold-2));
-    border-radius: 3px;
-    transition: width 0.2s;
-    width: 70%;
-  }
+  .metro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .metro-grid .full { grid-column: 1 / -1; }
+  .gap-box { border: 1px dashed rgba(255,215,0,0.35); border-radius: 12px; padding: 10px; }
+  .gap-box .gap-title { font-size: 0.85em; font-weight: 700; margin-bottom: 2px; }
+  .gap-box .gap-sub { font-size: 0.75em; color: var(--text-dim); margin-bottom: 8px; }
+  .gap-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metro-bottom { display: flex; gap: 10px; align-items: center; margin-top: 12px; }
+  .volume { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .volume-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden; }
+  .volume-bar div { height: 100%; background: var(--green); width: 70%; }
 
-  @media (max-width: 480px) {
-    .metronome { flex-direction: column; align-items: stretch; }
-    .metronome-header { justify-content: space-between; }
-    .metronome-body { flex-wrap: wrap; }
-    .bpm-slider { width: 100%; }
-  }
+  /* ===== Collapsible sections ===== */
+  .section-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; gap: 10px; }
+  .section-header h2 { font-size: 1.05em; font-weight: 800; }
+  .section-header .hint { color: var(--text-dim); font-size: 0.8em; font-weight: 500; margin-left: 6px; }
+  .toggle-icon { transition: transform 0.2s; color: var(--text-dim); }
+  .collapsed .toggle-icon { transform: rotate(-90deg); }
+  .collapsed .section-body { display: none; }
+  .section-body { margin-top: 12px; }
 
-  /* Summary */
-  .summary-list {
-    list-style: none;
-  }
+  /* ===== Units ===== */
+  .units { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .unit { background: var(--card-2); border: 1px solid var(--card-border); border-radius: 14px; padding: 10px; transition: border-color 0.2s, background 0.2s; }
+  .unit.current { border-color: var(--gold); background: rgba(255,215,0,0.07); }
+  .unit.completed { opacity: 0.6; }
+  .unit-top { display: flex; gap: 8px; align-items: center; }
+  .unit-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,215,0,0.15); color: var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85em; flex-shrink: 0; }
+  .unit-name { flex: 1; min-width: 0; }
+  .unit-min { width: 74px !important; flex-shrink: 0; text-align: center; }
+  .unit-min-label { color: var(--text-dim); font-size: 0.8em; flex-shrink: 0; }
+  .unit-bottom { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .unit-tags { display: flex; gap: 5px; flex-wrap: wrap; flex: 1 1 160px; min-width: 0; overflow: hidden; }
+  .tag { font-size: 0.72em; padding: 3px 8px; border-radius: 99px; background: rgba(255,255,255,0.07); color: var(--text-dim); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .tag.cycle { background: rgba(77,139,255,0.18); color: #a9c4ff; }
+  .tag.bpm { background: rgba(255,215,0,0.13); color: var(--gold); }
+  .unit-actions { display: flex; gap: 4px; }
+  .unit-details { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--card-border); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .unit-details .full { grid-column: 1 / -1; }
 
-  .summary-list li {
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-  }
+  /* ===== Presets ===== */
+  .preset-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .preset-row > * { flex: 1 1 140px; }
+  .preset-row + .preset-row { margin-top: 8px; }
 
-  .summary-list li:last-child { border-bottom: none; }
+  /* ===== Library ===== */
+  .lib-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chip-btn { border: 1px solid var(--card-border); background: rgba(255,255,255,0.05); color: var(--text-dim); border-radius: 99px; padding: 7px 12px; font-size: 0.8em; cursor: pointer; min-height: 34px; }
+  .chip-btn.active { background: var(--gold); color: #1a1a1a; border-color: var(--gold); font-weight: 700; }
+  .lib-cat { margin-bottom: 14px; }
+  .lib-cat h3 { font-size: 0.8em; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gold); margin-bottom: 6px; }
+  .lib-item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 10px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--card-border); margin-bottom: 6px; }
+  .lib-item .lib-text { flex: 1; min-width: 0; }
+  .lib-item .lib-name { font-weight: 700; font-size: 0.92em; }
+  .lib-item .lib-tip { color: var(--text-dim); font-size: 0.8em; margin-top: 2px; }
+  .lib-item .lib-meta { margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap; }
+  .lib-add { background: var(--gold); color: #1a1a1a; border: 0; width: 38px; height: 38px; border-radius: 10px; font-size: 1.3em; font-weight: 800; cursor: pointer; flex-shrink: 0; }
+  .lib-add.added { background: var(--green); }
 
-  .summary-list .section-name {
-    flex: 1;
-    font-size: 0.95em;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+  /* ===== Summary ===== */
+  .summary-list { list-style: none; }
+  .summary-list li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--card-border); font-size: 0.9em; }
+  .summary-list li:last-child { border-bottom: 0; }
+  .summary-list .s-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .summary-list .s-time { color: var(--text-dim); }
+  .status { font-size: 0.72em; padding: 3px 8px; border-radius: 99px; font-weight: 700; }
+  .status-pending { background: rgba(255,255,255,0.08); color: var(--text-dim); }
+  .status-current { background: rgba(255,215,0,0.18); color: var(--gold); }
+  .status-done { background: rgba(0,217,126,0.15); color: var(--green); }
+  .summary-total { display: flex; justify-content: space-between; margin-top: 8px; font-weight: 700; }
 
-  .summary-list .section-time { color: var(--gold); font-weight: 600; font-size: 0.9em; }
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-  .summary-list .section-status {
-    font-size: 0.75em;
-    padding: 3px 10px;
-    border-radius: 10px;
-    font-weight: 600;
-  }
+  footer { max-width: 1200px; margin: 18px auto 0; text-align: center; color: var(--text-dim); font-size: 0.75em; }
 
-  .status-pending { background: rgba(255, 255, 255, 0.06); color: var(--text-dim); }
-  .status-current { background: rgba(255, 215, 0, 0.2); color: var(--gold); }
-  .status-done { background: rgba(0, 217, 126, 0.15); color: var(--green); }
-
-  /* Fireworks celebration overlay */
-  .celebration-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.95));
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    padding: 20px;
-  }
-
+  /* ===== Celebration ===== */
+  .celebration-overlay { display: none; position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(0,0,0,0.7), rgba(0,0,0,0.95)); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
   .celebration-overlay.show { display: flex; }
-
-  .celebration-text {
-    font-size: 2.5em;
-    color: var(--gold);
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
-    font-weight: 800;
-    text-align: center;
-    animation: bounce-in 0.6s ease-out;
-    line-height: 1.1;
-  }
-
-  @keyframes bounce-in {
-    0% { transform: scale(0.3); opacity: 0; }
-    60% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(1); }
-  }
-
-  .celebration-sub {
-    font-size: 1.1em;
-    color: #fff;
-    margin-top: 16px;
-    text-align: center;
-    animation: fade-in 1s 0.3s both;
-  }
-
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .celebration-close {
-    margin-top: 30px;
-    animation: fade-in 1s 0.9s both;
-  }
-
-  /* Fireworks canvas */
-  #fireworksCanvas {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    pointer-events: none;
-    display: none;
-  }
-
+  .celebration-text { font-size: 2.5em; color: var(--gold); text-shadow: 0 0 30px rgba(255,215,0,0.6); font-weight: 800; text-align: center; animation: bounce-in 0.6s ease-out; line-height: 1.1; }
+  @keyframes bounce-in { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
+  .celebration-sub { font-size: 1.1em; margin-top: 16px; text-align: center; animation: fade-in 1s 0.3s both; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .celebration-close { margin-top: 30px; animation: fade-in 1s 0.9s both; }
+  #fireworksCanvas { position: fixed; inset: 0; z-index: 999; pointer-events: none; display: none; }
   #fireworksCanvas.show { display: block; }
+  .confetti-piece { position: fixed; width: 10px; height: 14px; top: -20px; z-index: 1001; pointer-events: none; animation: confetti-fall linear forwards; }
+  @keyframes confetti-fall { to { top: 110vh; transform: rotate(720deg); } }
 
-  /* Confetti */
-  .confetti-piece {
-    position: fixed;
-    width: 10px;
-    height: 14px;
-    top: -20px;
-    z-index: 1001;
-    pointer-events: none;
-    animation: confetti-fall linear forwards;
+  /* ===== Mobile ===== */
+  @media (max-width: 899px) {
+    body { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    .desktop-only { display: none !important; }
+    .controls {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0;
+      background: rgba(10,10,20,0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid var(--card-border);
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      flex-wrap: nowrap;
+    }
+    .controls .btn { flex: 1 1 0; min-width: 0; min-height: 54px; padding: 8px 6px; font-size: 0.92em; }
+  }
+  @media (max-width: 420px) {
+    .brand h1 { font-size: 1.35em; }
+    .countdown { font-size: 3.4em; }
+    .kc-key { font-size: 2.8em; }
+    .controls .btn .lbl-opt { display: none; }
+    .unit-details, .settings-grid { grid-template-columns: 1fr; }
+    .unit-min { width: 60px !important; }
+    .unit-actions { margin-left: auto; }
   }
 
-  @keyframes confetti-fall {
-    to { top: 110vh; transform: rotate(720deg); }
-  }
-
-  /* Mobile-first adjustments */
-  @media (max-width: 480px) {
-    body { padding: 12px; }
-    h1 { font-size: 1.6em; }
-    .countdown { font-size: 3.2em; }
-    .current-practice { font-size: 1.25em; }
-    .timer-section { padding: 22px 14px; }
-  }
-
-  @media (min-width: 768px) {
-    .countdown { font-size: 4.9em; }
+  /* ===== Desktop ===== */
+  @media (min-width: 900px) {
+    body { padding: 24px 24px 40px; }
+    .brand h1 { font-size: 2em; }
+    .layout { grid-template-columns: minmax(380px, 460px) 1fr; gap: 20px; align-items: start; }
+    .col-left { position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; scrollbar-width: thin; }
+    .countdown { font-size: 4.8em; }
+    .mobile-only { display: none !important; }
   }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>&#9835; Practice Pal</h1>
-  <p class="subtitle">Music Practice Timer</p>
-
-  <!-- Timer (hero, always visible) -->
-  <div class="timer-section">
-    <div class="screen-on-reminder">&#128161; Keep screen on!</div>
-    <div class="current-practice-label" id="currentLabel">No unit active</div>
-    <div class="current-practice" id="currentPractice">-</div>
-    <div class="countdown normal" id="countdown">00:00</div>
-    <div class="inline-total">
-      <div class="inline-total-label">Total Practice Time</div>
-      <div class="inline-total-time" id="totalTime">00:00</div>
-    </div>
-    <div class="progress-bar-container">
-      <div class="progress-bar" id="progressBar" style="width: 100%"></div>
-    </div>
-    <div class="timer-controls">
-      <button class="btn btn-green" id="startBtn" onclick="startTimer()">&#9654; Start</button>
-      <button class="btn btn-gold" id="pauseBtn" onclick="pauseTimer()" style="display:none">&#10074;&#10074; Pause</button>
-      <button class="btn btn-red" id="stopBtn" onclick="stopTimer()" style="display:none">&#9632; Stop</button>
-    </div>
-    <div class="secondary-controls">
-      <button class="btn btn-ghost btn-small" onclick="skipSection()">Skip &#10145;</button>
-    </div>
-    <div class="section-jumper" id="sectionJumper"></div>
+<header class="app-header">
+  <div class="brand">
+    <h1>&#9835; Practice Pal</h1>
+    <p class="subtitle" data-i18n="subtitle"></p>
   </div>
+  <div class="lang-switch" role="group" aria-label="Language">
+    <button type="button" data-lang="de" onclick="setLang('de')">DE</button>
+    <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
+  </div>
+</header>
 
-  <!-- Metronome -->
-  <div class="metronome">
-    <div class="metronome-header">
-      <span class="metronome-title">&#9836; Metronome</span>
-      <label class="metronome-toggle">
-        <input type="checkbox" id="metronomeToggle" onchange="toggleMetronome()">
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-    <div class="metronome-body">
-      <div class="bpm-display">
-        <span id="bpmValue">120</span>
-        <span class="bpm-label">BPM</span>
-      </div>
-      <input type="range" min="30" max="300" value="120" class="bpm-slider" id="bpmSlider" oninput="updateBpm(this.value)">
-      <div class="bpm-range">
-        <span>30</span>
-        <span>300</span>
-      </div>
-      <div class="volume-control">
-        <button class="volume-btn" onclick="adjustVolume(-0.1)">&#128263;</button>
-        <div class="volume-bar-container">
-          <div class="volume-bar" id="volumeBar"></div>
+<main class="layout">
+  <!-- ===== Left column: timer + metronome ===== -->
+  <div class="col col-left">
+    <section class="card timer-card">
+      <div class="screen-on" data-i18n="screenOn"></div>
+      <div class="current-label" id="currentLabel"></div>
+      <div class="current-practice" id="currentPractice">-</div>
+      <div class="current-tip" id="currentTip"></div>
+      <div class="countdown" id="countdown">00:00</div>
+      <div class="progress"><div id="progressBar"></div></div>
+      <div class="total"><span data-i18n="totalTime"></span><b id="totalTime">00:00</b></div>
+
+      <div class="keycycle" id="keyCycle" style="display:none">
+        <div class="kc-head"><span id="kcLabel"></span><span id="kcRound"></span></div>
+        <div class="kc-main">
+          <div class="kc-key" id="kcKey">C</div>
+          <div class="kc-next"><span data-i18n="nextKeyLabel"></span><b id="kcNext"></b></div>
         </div>
-        <button class="volume-btn" onclick="adjustVolume(0.1)">&#128266;</button>
+        <div class="kc-chips" id="kcChips"></div>
+        <div class="kc-hint" id="kcHint"></div>
       </div>
-    </div>
-  </div>
 
-  <!-- Practice Units -->
-  <div class="section" id="unitsSection">
-    <div class="section-header" onclick="toggleSection('unitsSection')">
-      <h2>&#9998;&#65039; Practice Units</h2>
-      <span class="toggle-icon">&#9662;</span>
-    </div>
-    <div class="section-body">
-      <div class="fields-grid" id="fieldsGrid"></div>
-      <button class="btn btn-gold btn-block" onclick="addField()">&#10133; Add Unit</button>
-    </div>
-  </div>
-
-  <!-- Presets -->
-  <div class="section collapsed" id="presetsSection">
-    <div class="section-header" onclick="toggleSection('presetsSection')">
-      <h2>&#128190; Presets</h2>
-      <span class="toggle-icon">&#9662;</span>
-    </div>
-    <div class="section-body">
-      <div class="preset-controls">
-        <select class="preset-select" id="presetSelect" onchange="loadPreset()">
-          <option value="">-- Load Preset --</option>
-        </select>
-        <input type="text" class="preset-name-input" id="presetName" placeholder="Preset name...">
-        <button class="btn btn-gold btn-small" onclick="savePreset()">&#128190; Save</button>
-        <button class="btn btn-gold btn-small" onclick="saveAsDefaultPreset()">&#9733; Save as Default</button>
-        <button class="btn btn-red btn-small" onclick="deletePreset()">&#10005; Delete</button>
-        <button class="btn btn-blue btn-small" onclick="loadDefaultPreset()">&#9835; Load Default</button>
+      <div class="controls" id="controls">
+        <button class="btn btn-green" id="startBtn" onclick="startTimer()"></button>
+        <button class="btn btn-gold" id="pauseBtn" onclick="pauseTimer()" style="display:none"></button>
+        <button class="btn btn-red" id="stopBtn" onclick="stopTimer()" style="display:none"></button>
+        <button class="btn btn-ghost" id="skipBtn" onclick="skipSection()" style="display:none"></button>
+        <button class="btn btn-blue" id="nextKeyBtn" onclick="nextKey(true)" style="display:none"></button>
       </div>
-    </div>
+      <div class="section-jumper" id="sectionJumper"></div>
+      <div class="shortcuts desktop-only" data-i18n-html="shortcuts"></div>
+    </section>
+
+    <section class="card metronome">
+      <div class="row-between">
+        <span class="card-title">&#9836; <span data-i18n="metronome"></span></span>
+        <label class="switch" aria-label="Metronome on/off">
+          <input type="checkbox" id="metronomeToggle" onchange="toggleMetronome()">
+          <span></span>
+        </label>
+      </div>
+      <div class="bpm-row">
+        <button class="icon-btn" onclick="setBpm(metro.bpm - 5)">&minus;5</button>
+        <button class="icon-btn" onclick="setBpm(metro.bpm - 1)">&minus;1</button>
+        <div class="bpm-display"><b id="bpmValue">120</b><small>BPM</small></div>
+        <button class="icon-btn" onclick="setBpm(metro.bpm + 1)">+1</button>
+        <button class="icon-btn" onclick="setBpm(metro.bpm + 5)">+5</button>
+      </div>
+      <input type="range" min="20" max="300" value="120" class="bpm-slider" id="bpmSlider" oninput="setBpm(this.value)" aria-label="BPM">
+      <div class="beat-dots" id="beatDots"></div>
+      <div class="metro-status" id="metroStatus"></div>
+
+      <div class="metro-grid">
+        <label class="field"><span data-i18n="timeSig"></span><select id="timeSigSelect" onchange="setMetro('beats', parseInt(this.value))"></select></label>
+        <label class="field"><span data-i18n="accent"></span><select id="accentSelect" onchange="setMetro('accent', this.value)"></select></label>
+        <div class="gap-box full">
+          <div class="gap-title">&#128263; <span data-i18n="gapTitle"></span></div>
+          <div class="gap-sub" data-i18n="gapSub"></div>
+          <div class="gap-inputs">
+            <label class="field"><span data-i18n="gapPlay"></span><input type="number" id="gapPlay" min="0" max="32" inputmode="numeric" onchange="setMetro('playBars', clampInt(this.value, 0, 32))"></label>
+            <label class="field"><span data-i18n="gapMute"></span><input type="number" id="gapMute" min="0" max="32" inputmode="numeric" onchange="setMetro('muteBars', clampInt(this.value, 0, 32))"></label>
+          </div>
+        </div>
+      </div>
+      <div class="metro-bottom">
+        <button class="btn btn-ghost btn-small" onclick="tapTempo()">&#128070; <span data-i18n="tap"></span></button>
+        <div class="volume">
+          <button class="icon-btn" onclick="adjustVolume(-0.1)" aria-label="Volume down">&#128265;</button>
+          <div class="volume-bar"><div id="volumeBar"></div></div>
+          <button class="icon-btn" onclick="adjustVolume(0.1)" aria-label="Volume up">&#128266;</button>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <!-- Summary -->
-  <div class="section collapsed" id="summarySection">
-    <div class="section-header" onclick="toggleSection('summarySection')">
-      <h2>&#128203; Summary</h2>
-      <span class="toggle-icon">&#9662;</span>
-    </div>
-    <div class="section-body">
-      <ul class="summary-list" id="summaryList"></ul>
-    </div>
-  </div>
-</div>
+  <!-- ===== Right column ===== -->
+  <div class="col col-right">
+    <section class="card" id="unitsSection">
+      <div class="section-header" onclick="toggleSection('unitsSection')">
+        <h2>&#9998;&#65039; <span data-i18n="units"></span><span class="hint" id="unitsHint"></span></h2>
+        <span class="toggle-icon">&#9662;</span>
+      </div>
+      <div class="section-body">
+        <div class="units" id="unitsList"></div>
+        <button class="btn btn-gold btn-block" onclick="addUnit()">&#10133; <span data-i18n="addUnit"></span></button>
+      </div>
+    </section>
 
-<!-- Fireworks canvas -->
+    <section class="card" id="presetsSection">
+      <div class="section-header" onclick="toggleSection('presetsSection')">
+        <h2>&#128190; <span data-i18n="presets"></span></h2>
+        <span class="toggle-icon">&#9662;</span>
+      </div>
+      <div class="section-body">
+        <div class="preset-row">
+          <select id="presetSelect" onchange="loadSelectedPreset()" aria-label="Preset"></select>
+        </div>
+        <div class="preset-row">
+          <input type="text" id="presetName" data-i18n-ph="presetNamePh">
+        </div>
+        <div class="preset-row">
+          <button class="btn btn-gold btn-small" onclick="savePreset()">&#128190; <span data-i18n="save"></span></button>
+          <button class="btn btn-gold btn-small" onclick="saveAsDefaultPreset()">&#9733; <span data-i18n="saveDefault"></span></button>
+          <button class="btn btn-blue btn-small" onclick="loadDefaultPreset()">&#9835; <span data-i18n="loadDefault"></span></button>
+          <button class="btn btn-red btn-small" onclick="deletePreset()">&#10005; <span data-i18n="delete"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card collapsed" id="librarySection">
+      <div class="section-header" onclick="toggleSection('librarySection')">
+        <h2>&#128161; <span data-i18n="library"></span><span class="hint" data-i18n="libraryHint"></span></h2>
+        <span class="toggle-icon">&#9662;</span>
+      </div>
+      <div class="section-body">
+        <div class="lib-filter" id="libFilter"></div>
+        <div id="libList"></div>
+      </div>
+    </section>
+
+    <section class="card collapsed" id="summarySection">
+      <div class="section-header" onclick="toggleSection('summarySection')">
+        <h2>&#128203; <span data-i18n="summary"></span></h2>
+        <span class="toggle-icon">&#9662;</span>
+      </div>
+      <div class="section-body">
+        <ul class="summary-list" id="summaryList"></ul>
+        <div class="summary-total"><span data-i18n="planned"></span><span id="plannedTotal"></span></div>
+      </div>
+    </section>
+
+    <section class="card collapsed" id="settingsSection">
+      <div class="section-header" onclick="toggleSection('settingsSection')">
+        <h2>&#9881;&#65039; <span data-i18n="settings"></span></h2>
+        <span class="toggle-icon">&#9662;</span>
+      </div>
+      <div class="section-body">
+        <div class="settings-grid">
+          <label class="field"><span data-i18n="notation"></span><select id="notationSelect" onchange="setSetting('notation', this.value)"></select></label>
+          <label class="field"><span data-i18n="enharmonic"></span><select id="enharmSelect" onchange="setSetting('sharp6', this.value === '1')"></select></label>
+          <label class="field"><span data-i18n="countdownBeeps"></span><select id="beepsSelect" onchange="setSetting('beeps', this.value === '1')"></select></label>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>Practice Pal &middot; <span data-i18n="footer"></span></footer>
+
 <canvas id="fireworksCanvas"></canvas>
-
-<!-- Celebration overlay -->
 <div class="celebration-overlay" id="celebrationOverlay">
   <div class="celebration-text">&#127881; Bravo! &#127881;</div>
-  <div class="celebration-sub">Practice complete &#127942;</div>
-  <button class="btn btn-gold celebration-close" onclick="closeCelebration()">&#128077; Close</button>
+  <div class="celebration-sub" id="celebrationSub"></div>
+  <button class="btn btn-gold celebration-close" onclick="closeCelebration()">&#128077; <span data-i18n="close"></span></button>
 </div>
 
 <script>
-// ========= State =========
-let practiceSections = [];
+// =====================================================================
+// I18N
+// =====================================================================
+const I18N = {
+  de: {
+    subtitle: 'Übungstimer für Musiker',
+    screenOn: '💡 Bildschirm bleibt während des Übens an',
+    ready: 'Bereit',
+    unitOf: 'Einheit {n} von {m}',
+    totalTime: 'Geübt:',
+    nextKeyLabel: 'Nächste',
+    start: 'Start', resume: 'Weiter', pause: 'Pause', stop: 'Stop', skip: 'Skip',
+    nextKeyBtn: 'Tonart', nextKeyBtnLong: 'Nächste Tonart',
+    shortcuts: '<kbd>Leertaste</kbd> Start/Pause &middot; <kbd>&rarr;</kbd> nächste Tonart &middot; <kbd>M</kbd> Metronom &middot; <kbd>T</kbd> Tap',
+    metronome: 'Metronom',
+    timeSig: 'Taktart',
+    accent: 'Betonung',
+    accOne: 'Betonung auf 1',
+    accTwoFour: 'Nur 2 & 4 (Jazz)',
+    accNone: 'Alle gleich',
+    noBar: 'ohne Takt',
+    gapTitle: 'Timing-Test: stumme Takte',
+    gapSub: 'Das Metronom klickt X Takte und läuft dann Y Takte stumm weiter. 0 = aus.',
+    gapPlay: 'Takte hörbar',
+    gapMute: 'Takte stumm',
+    tap: 'Tap',
+    bar: 'Takt {n}',
+    mutedNow: '🔇 stumm – weiterspielen!',
+    metroOff: 'Metronom aus',
+    units: 'Übungseinheiten',
+    addUnit: 'Einheit hinzufügen',
+    unitNamePh: 'Was übst du?',
+    min: 'Min.',
+    tip: 'Tipp / Notiz',
+    tipPh: 'Wie genau üben?',
+    unitBpm: 'Tempo für diese Einheit (BPM)',
+    unitBpmPh: '— (unverändert)',
+    cycle: 'Durch alle Tonarten',
+    cycleNone: '— aus —',
+    startKey: 'Starttonart',
+    cycleMode: 'Tonart wechseln',
+    modeManual: 'Per Knopf (manuell)',
+    modeTime: 'Automatisch über die Zeit verteilt',
+    modeBars: 'Automatisch alle N Takte',
+    barsPerKey: 'Takte pro Tonart',
+    moveUp: 'Nach oben', moveDown: 'Nach unten', details: 'Details', remove: 'Entfernen',
+    presets: 'Vorlagen',
+    builtinGroup: 'Vorlagen nach Stil & Instrument',
+    userGroup: 'Meine Vorlagen',
+    choosePreset: '— Vorlage wählen —',
+    presetNamePh: 'Name der Vorlage…',
+    save: 'Speichern', saveDefault: 'Als Standard', loadDefault: 'Standard laden', delete: 'Löschen',
+    library: 'Übungsideen',
+    libraryHint: 'antippen zum Hinzufügen',
+    summary: 'Übersicht',
+    planned: 'Geplant',
+    pending: 'Offen', active: 'Aktiv', done: 'Fertig',
+    settings: 'Einstellungen',
+    notation: 'Notennamen',
+    notIntl: 'International (Bb, B)',
+    notDe: 'Deutsch (B, H, Es, Fis …)',
+    enharmonic: 'Tonart auf der 6',
+    flat6: 'Gb / Ges',
+    sharp6: 'F# / Fis',
+    countdownBeeps: 'Countdown-Töne',
+    on: 'An', off: 'Aus',
+    footer: 'Deine Vorlagen werden nur in diesem Browser gespeichert.',
+    close: 'Schließen',
+    complete: 'Üben beendet 🏆',
+    roundN: 'Runde {n}',
+    keyNofM: 'Tonart {n}/12',
+    cycleHintBars: '🎵 Metronom einschalten – die Tonart wechselt alle {n} Takte.',
+    cycleHintManual: 'Mit „Nächste Tonart“ weiter (Desktop: Pfeiltaste →).',
+    cycleHintTime: 'Wechselt automatisch etwa alle {s}.',
+    alertNoUnits: 'Bitte mindestens eine Einheit mit Minuten anlegen.',
+    alertName: 'Bitte einen Namen für die Vorlage eingeben.',
+    alertSaved: 'Vorlage „{n}“ gespeichert.',
+    alertDefault: '„{n}“ ist jetzt deine Standard-Vorlage.',
+    alertSelect: 'Bitte eine eigene Vorlage zum Löschen auswählen.',
+    alertBuiltin: 'Eingebaute Vorlagen können nicht gelöscht werden.',
+    confirmDelete: 'Vorlage „{n}“ löschen?',
+    unnamed: 'Einheit {n}',
+    added: 'Hinzugefügt',
+    all: 'Alle',
+    tags: { jazz: 'Jazz', piano: 'Klavier', classical: 'Klassik', guitar: 'Gitarre', winds: 'Blasinstrumente', strings: 'Streicher', voice: 'Gesang', drums: 'Schlagzeug' },
+    cats: { scales: 'Skalen & Tonleitern', voicings: 'Voicings & Akkorde', vocab: 'Vocabulary & Linien', transcription: 'Transkription', technique: 'Technik', rhythm: 'Rhythmus & Time', ear: 'Gehörbildung', repertoire: 'Repertoire & Stücke' },
+    intervals: { 1: 'kleine Sekunde (chromatisch)', 2: 'große Sekunde (Ganztöne)', 3: 'kleine Terz', 4: 'große Terz', 5: 'Quarte (Quartenzirkel)', 6: 'Tritonus', 7: 'Quinte (Quintenzirkel)', 8: 'kleine Sexte', 9: 'große Sexte' },
+    intervalsShort: { 1: 'kl. Sekunde', 2: 'gr. Sekunde', 3: 'kl. Terz', 4: 'gr. Terz', 5: 'Quarte', 6: 'Tritonus', 7: 'Quinte', 8: 'kl. Sexte', 9: 'gr. Sexte' },
+    from: 'ab'
+  },
+  en: {
+    subtitle: 'Practice timer for musicians',
+    screenOn: '💡 Screen stays on while you practice',
+    ready: 'Ready',
+    unitOf: 'Unit {n} of {m}',
+    totalTime: 'Practiced:',
+    nextKeyLabel: 'Next',
+    start: 'Start', resume: 'Resume', pause: 'Pause', stop: 'Stop', skip: 'Skip',
+    nextKeyBtn: 'Key', nextKeyBtnLong: 'Next key',
+    shortcuts: '<kbd>Space</kbd> start/pause &middot; <kbd>&rarr;</kbd> next key &middot; <kbd>M</kbd> metronome &middot; <kbd>T</kbd> tap',
+    metronome: 'Metronome',
+    timeSig: 'Time signature',
+    accent: 'Accent',
+    accOne: 'Accent on 1',
+    accTwoFour: 'Only 2 & 4 (jazz)',
+    accNone: 'All equal',
+    noBar: 'no bar',
+    gapTitle: 'Timing test: silent bars',
+    gapSub: 'The metronome clicks for X bars, then keeps running silently for Y bars. 0 = off.',
+    gapPlay: 'Bars audible',
+    gapMute: 'Bars silent',
+    tap: 'Tap',
+    bar: 'Bar {n}',
+    mutedNow: '🔇 silent – keep playing!',
+    metroOff: 'Metronome off',
+    units: 'Practice units',
+    addUnit: 'Add unit',
+    unitNamePh: 'What are you practicing?',
+    min: 'min',
+    tip: 'Tip / note',
+    tipPh: 'How exactly to practice?',
+    unitBpm: 'Tempo for this unit (BPM)',
+    unitBpmPh: '— (unchanged)',
+    cycle: 'Through all keys',
+    cycleNone: '— off —',
+    startKey: 'Starting key',
+    cycleMode: 'Change key',
+    modeManual: 'By button (manual)',
+    modeTime: 'Automatically, spread over the time',
+    modeBars: 'Automatically every N bars',
+    barsPerKey: 'Bars per key',
+    moveUp: 'Move up', moveDown: 'Move down', details: 'Details', remove: 'Remove',
+    presets: 'Presets',
+    builtinGroup: 'Presets by style & instrument',
+    userGroup: 'My presets',
+    choosePreset: '— Choose a preset —',
+    presetNamePh: 'Preset name…',
+    save: 'Save', saveDefault: 'Set as default', loadDefault: 'Load default', delete: 'Delete',
+    library: 'Practice ideas',
+    libraryHint: 'tap to add',
+    summary: 'Summary',
+    planned: 'Planned',
+    pending: 'Pending', active: 'Active', done: 'Done',
+    settings: 'Settings',
+    notation: 'Note names',
+    notIntl: 'International (Bb, B)',
+    notDe: 'German (B, H, Es, Fis …)',
+    enharmonic: 'Key on the 6th step',
+    flat6: 'Gb',
+    sharp6: 'F#',
+    countdownBeeps: 'Countdown beeps',
+    on: 'On', off: 'Off',
+    footer: 'Your presets are stored only in this browser.',
+    close: 'Close',
+    complete: 'Practice complete 🏆',
+    roundN: 'Round {n}',
+    keyNofM: 'Key {n}/12',
+    cycleHintBars: '🎵 Turn on the metronome – the key changes every {n} bars.',
+    cycleHintManual: 'Press “Next key” to move on (desktop: → arrow key).',
+    cycleHintTime: 'Changes automatically about every {s}.',
+    alertNoUnits: 'Please add at least one unit with minutes.',
+    alertName: 'Please enter a name for the preset.',
+    alertSaved: 'Preset “{n}” saved.',
+    alertDefault: '“{n}” is now your default preset.',
+    alertSelect: 'Please select one of your own presets to delete.',
+    alertBuiltin: 'Built-in presets cannot be deleted.',
+    confirmDelete: 'Delete preset “{n}”?',
+    unnamed: 'Unit {n}',
+    added: 'Added',
+    all: 'All',
+    tags: { jazz: 'Jazz', piano: 'Piano', classical: 'Classical', guitar: 'Guitar', winds: 'Winds & brass', strings: 'Strings', voice: 'Voice', drums: 'Drums' },
+    cats: { scales: 'Scales', voicings: 'Voicings & chords', vocab: 'Vocabulary & lines', transcription: 'Transcription', technique: 'Technique', rhythm: 'Rhythm & time', ear: 'Ear training', repertoire: 'Repertoire & pieces' },
+    intervals: { 1: 'minor second (chromatic)', 2: 'major second (whole steps)', 3: 'minor third', 4: 'major third', 5: 'fourth (circle of fourths)', 6: 'tritone', 7: 'fifth (circle of fifths)', 8: 'minor sixth', 9: 'major sixth' },
+    intervalsShort: { 1: 'min 2nd', 2: 'maj 2nd', 3: 'min 3rd', 4: 'maj 3rd', 5: '4th', 6: 'tritone', 7: '5th', 8: 'min 6th', 9: 'maj 6th' },
+    from: 'from'
+  }
+};
+
+let lang = localStorage.getItem('ppLang') || ((navigator.language || 'de').toLowerCase().startsWith('de') ? 'de' : 'en');
+
+function t(key, vars) {
+  let s = (I18N[lang] && I18N[lang][key]);
+  if (s === undefined) s = I18N.en[key] !== undefined ? I18N.en[key] : key;
+  if (vars && typeof s === 'string') Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function clampInt(v, lo, hi) { v = parseInt(v, 10); if (isNaN(v)) v = lo; return Math.max(lo, Math.min(hi, v)); }
+function fmtTime(sec) { sec = Math.max(0, Math.floor(sec)); return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
+
+// =====================================================================
+// Settings (note names etc.)
+// =====================================================================
+let settings = Object.assign({ notation: lang === 'de' ? 'intl' : 'intl', sharp6: false, beeps: true }, JSON.parse(localStorage.getItem('ppSettings') || '{}'));
+function setSetting(k, v) {
+  settings[k] = v;
+  localStorage.setItem('ppSettings', JSON.stringify(settings));
+  renderAll();
+}
+const NOTES_INTL = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+const NOTES_DE = ['C', 'Des', 'D', 'Es', 'E', 'F', 'Ges', 'G', 'As', 'A', 'B', 'H'];
+function noteName(pc) {
+  pc = ((pc % 12) + 12) % 12;
+  if (pc === 6 && settings.sharp6) return settings.notation === 'de' ? 'Fis' : 'F#';
+  return (settings.notation === 'de' ? NOTES_DE : NOTES_INTL)[pc];
+}
+
+// =====================================================================
+// Key cycles ("durch alle Tonarten")
+// Every interval produces a sequence through all 12 keys. If the interval
+// does not reach all 12 keys on its own (2nds, 3rds, tritone, 6ths), the
+// sequence continues one semitone higher until every key has appeared.
+// =====================================================================
+const INTERVALS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+function keySequence(semi, start) {
+  const g = gcd(semi, 12), len = 12 / g, seq = [], groups = [];
+  for (let k = 0; k < g; k++) {
+    for (let j = 0; j < len; j++) seq.push((start + k + j * semi) % 12);
+    groups.push(len);
+  }
+  return { seq, groupLen: len };
+}
+
+// =====================================================================
+// Practice library (research-based) – bilingual
+// cy: [semitones, mode, barsPerKey]  mode: manual | time | bars
+// =====================================================================
+const LIB = {};
+const LIB_ORDER = [];
+function L(id, cat, tags, minutes, name, tip, extra) {
+  const item = Object.assign({ id, cat, tags, minutes, name: { de: name[0], en: name[1] }, tip: { de: tip[0], en: tip[1] } }, extra || {});
+  if (item.cy) { item.cycle = { semi: item.cy[0], start: 0, mode: item.cy[1] || 'manual', bars: item.cy[2] || 4 }; delete item.cy; }
+  LIB[id] = item; LIB_ORDER.push(id);
+}
+
+// ---- Scales
+L('sc-jazz-mix', 'scales', ['jazz', 'piano'], 10,
+  ['Skalen & Modi in allen Tonarten', 'Scales & modes in all keys'],
+  ['Dur & Modi, Barry-Harris-Bebop-Skalen (Dur-6-vermindert, Dominant-Bebop, Moll-6-vermindert), melodisch Moll, vermindert. Pro Tonart eine Skala in Achteln über 2 Oktaven.',
+   'Major & modes, Barry Harris bebop scales (major 6th diminished, dominant bebop, minor 6th diminished), melodic minor, diminished. One scale per key in eighth notes over 2 octaves.'],
+  { cy: [5, 'time'] });
+L('sc-major-modes', 'scales', ['all'], 10,
+  ['Dur-Tonleiter & Modi', 'Major scale & modes'],
+  ['Ionisch bis Lokrisch – vom Grundton und als Achtel-Linie über 2 Oktaven. Langsam, gleichmäßig, mit Metronom.',
+   'Ionian to Locrian – from the root and as an eighth-note line over 2 octaves. Slow, even, with the metronome.'],
+  { cy: [5, 'manual'] });
+L('sc-bh-major', 'scales', ['jazz', 'piano'], 8,
+  ['Barry Harris: Dur-Bebop (Dur-6-vermindert)', 'Barry Harris: major bebop (major 6th diminished)'],
+  ['C D E F G G# A B. Achtel abwärts vom Grundton – die Töne von C6 landen auf den Schlägen. Klavier: jede Stufe harmonisieren, C6 und Bdim7 wechseln sich ab.',
+   'C D E F G G# A B. Eighth notes descending from the root – the notes of C6 land on the beats. Piano: harmonize every step, alternating C6 and Bdim7.'],
+  { cy: [5, 'manual'] });
+L('sc-bh-dom', 'scales', ['jazz'], 8,
+  ['Barry Harris: Dominant-Bebop-Skala', 'Barry Harris: dominant bebop scale'],
+  ['C D E F G A Bb B – Halbton zwischen b7 und Grundton. Abwärts von 1, 3, 5 und b7 starten; Barry-Harris-Regeln: Halbton-Umspielungen, Richtungswechsel auf Akkordtönen.',
+   'C D E F G A Bb B – half step between b7 and root. Start descending from 1, 3, 5 and b7; Barry Harris rules: half-step approaches, change direction on chord tones.'],
+  { cy: [5, 'manual'] });
+L('sc-bh-minor', 'scales', ['jazz', 'piano'], 8,
+  ['Barry Harris: Moll-6-vermindert-Skala', 'Barry Harris: minor 6th diminished scale'],
+  ['C D Eb F G Ab A B. Wie die Dur-Version, aber mit kleiner Terz – Cm6 und Bdim7 im Wechsel harmonisieren.',
+   'C D Eb F G Ab A B. Like the major version but with a minor third – harmonize alternating Cm6 and Bdim7.'],
+  { cy: [5, 'manual'] });
+L('sc-melmin', 'scales', ['jazz'], 8,
+  ['Melodisch Moll & Modi', 'Melodic minor & modes'],
+  ['Melodisch Moll, dazu Lydisch-Dominant, Alteriert und Lokrisch #2 – immer mit dem passenden Akkord im Kopf oder in der linken Hand.',
+   'Melodic minor plus Lydian dominant, altered and Locrian #2 – always with the matching chord in your head or left hand.'],
+  { cy: [5, 'manual'] });
+L('sc-dim', 'scales', ['jazz'], 6,
+  ['Vermindert & Ganzton', 'Diminished & whole tone'],
+  ['Halbton-Ganzton über Dominanten (b9, #9, 13), Ganzton über 7#5. Es gibt nur 3 bzw. 2 verschiedene Skalen – trotzdem in allen 12 Tonarten spielen.',
+   'Half-whole over dominants (b9, #9, 13), whole tone over 7#5. There are only 3 and 2 distinct scales – still play them in all 12 keys.'],
+  { cy: [1, 'manual'] });
+L('sc-penta', 'scales', ['jazz', 'guitar', 'all'], 8,
+  ['Pentatonik & Blues-Skala', 'Pentatonic & blues scale'],
+  ['Dur- und Moll-Pentatonik plus Blues-Skala durch alle Lagen bzw. Oktaven. Kleine Motive bilden und sequenzieren.',
+   'Major and minor pentatonic plus the blues scale through all positions/octaves. Build small motifs and sequence them.'],
+  { cy: [5, 'manual'] });
+L('sc-classic', 'scales', ['classical', 'piano', 'strings', 'winds'], 10,
+  ['Tonleitern & Kadenzen (Quintenzirkel)', 'Scales & cadences (circle of fifths)'],
+  ['Dur und harmonisch/melodisch Moll über 2–4 Oktaven, danach Kadenz I–IV–V–I. Klavier: Hände zusammen, auch in Terzen und Sexten.',
+   'Major and harmonic/melodic minor over 2–4 octaves, then a I–IV–V–I cadence. Piano: hands together, also in thirds and sixths.'],
+  { cy: [7, 'time'] });
+L('sc-arp', 'scales', ['all'], 10,
+  ['Arpeggien (Dreiklänge & Septakkorde)', 'Arpeggios (triads & seventh chords)'],
+  ['Dur, Moll, vermindert, übermäßig; dann maj7, 7, m7, m7b5, dim7 – in allen Umkehrungen.',
+   'Major, minor, diminished, augmented; then maj7, 7, m7, m7b5, dim7 – in all inversions.'],
+  { cy: [5, 'time'] });
+L('sc-caged', 'scales', ['guitar'], 10,
+  ['Skalen in CAGED-Positionen', 'Scales in CAGED positions'],
+  ['Eine Skala durch alle 5 Positionen, dann auf einer Saite verschieben. Tonart vor jeder Runde laut sagen.',
+   'One scale through all 5 positions, then shift along a single string. Say the key out loud before each round.'],
+  { cy: [5, 'time'] });
+L('sc-segovia', 'scales', ['guitar', 'classical'], 10,
+  ['Segovia-Tonleitern', 'Segovia scales'],
+  ['Dur- und Molltonleitern nach Segovia, Wechselschlag i-m und m-a, apoyando und tirando.',
+   'Segovia major and minor scales, alternating i-m and m-a, rest strokes and free strokes.'],
+  { cy: [7, 'time'] });
+
+// ---- Voicings
+L('vo-shell', 'voicings', ['jazz', 'piano', 'guitar'], 10,
+  ['Shell-Voicings II–V–I', 'Shell voicings ii–V–I'],
+  ['1-3-7 und 1-7-3 in der linken Hand; Stimmführung: die Septime fällt zur Terz. Erst Dur-, dann Moll-II–V–I.',
+   '1-3-7 and 1-7-3 in the left hand; voice leading: the seventh falls to the third. Major ii–V–I first, then minor.'],
+  { cy: [5, 'bars', 4] });
+L('vo-rootless', 'voicings', ['jazz', 'piano'], 15,
+  ['Rootless Voicings A/B (II–V–I)', 'Rootless voicings A/B (ii–V–I)'],
+  ['Typ A (3-5-7-9) und Typ B (7-9-3-5) im Wechsel, damit die Stimmen kaum springen. Dann mit Melodie in der rechten Hand oder zum Play-along.',
+   'Type A (3-5-7-9) and type B (7-9-3-5) alternating so the voices barely move. Then with a melody in the right hand or with a play-along.'],
+  { cy: [5, 'time'] });
+L('vo-drop2', 'voicings', ['piano', 'guitar', 'jazz'], 10,
+  ['Drop-2-Voicings', 'Drop 2 voicings'],
+  ['Vierklänge in allen Umkehrungen, zweithöchste Stimme eine Oktave tiefer. Ideal für Melodie-Harmonisierung (Block Chords).',
+   'Four-note chords in all inversions with the second voice from the top dropped an octave. Great for harmonizing melodies (block chords).'],
+  { cy: [5, 'manual'] });
+L('vo-ust', 'voicings', ['jazz', 'piano'], 10,
+  ['Upper-Structure-Dreiklänge', 'Upper structure triads'],
+  ['Links 3 + b7 des Dominantseptakkords, rechts Dreiklänge auf II (9/#11/13), bVI (b13/#9), VI (13/b9) … Klang und Name lernen.',
+   'Left hand 3 + b7 of the dominant, right hand triads on II (9/#11/13), bVI (b13/#9), VI (13/b9) … learn the sound and the name.'],
+  { cy: [5, 'manual'] });
+L('vo-bh-6dim', 'voicings', ['jazz', 'piano'], 10,
+  ['Barry Harris: 6-vermindert-Akkordbewegung', 'Barry Harris: 6th diminished chord movement'],
+  ['Die Dur-6-vermindert-Skala in Vierklängen harmonisieren: C6 und Bdim7 wechseln sich ab. Dann als Drop 2 und Drop 3 – der typische Bebop-Klavier-Sound.',
+   'Harmonize the major 6th diminished scale in four-note chords: C6 and Bdim7 alternate. Then as drop 2 and drop 3 – the classic bebop piano sound.'],
+  { cy: [5, 'manual'] });
+L('vo-quartal', 'voicings', ['jazz', 'piano', 'guitar'], 8,
+  ['Quarten-Voicings (So What)', 'Quartal voicings (So What)'],
+  ['Drei Quarten + große Terz (So-What-Akkord) und reine Quartenstapel; diatonisch durch Dorisch verschieben.',
+   'Three fourths + a major third (So What chord) and pure stacks of fourths; move them diatonically through Dorian.'],
+  { cy: [5, 'manual'] });
+
+// ---- Vocabulary
+L('vb-lick12', 'vocab', ['jazz', 'all'], 10,
+  ['Vocabulary: ein Lick in 12 Tonarten', 'Vocabulary: one lick in 12 keys'],
+  ['Eine Phrase (z. B. aus einer Transkription) über II–V–I. Pro Tonart 4 Takte, dann weiter – bis sie in jeder Tonart ohne Nachdenken kommt.',
+   'One phrase (e.g. from a transcription) over ii–V–I. Four bars per key, then move on – until it comes without thinking in every key.'],
+  { cy: [5, 'bars', 4], bpm: 100 });
+L('vb-enclosure', 'vocab', ['jazz'], 8,
+  ['Enclosures & chromatische Annäherung', 'Enclosures & chromatic approach'],
+  ['Zielton (meist 3 oder 5) von oben diatonisch und von unten chromatisch einkreisen – und genau auf der Zählzeit landen.',
+   'Surround a target note (usually 3 or 5) diatonically from above and chromatically from below – landing right on the beat.'],
+  { cy: [5, 'manual'] });
+L('vb-guide', 'vocab', ['jazz', 'all'], 10,
+  ['Guide-Tone-Linien (3 & 7)', 'Guide tone lines (3 & 7)'],
+  ['Durch einen Standard nur Terzen und Septimen spielen – dann in Vierteln verbinden, dann in Achteln ausschmücken.',
+   'Play only thirds and sevenths through a standard – then connect them in quarter notes, then decorate in eighths.']);
+L('vb-digital', 'vocab', ['jazz'], 8,
+  ['Digital Patterns (1-2-3-5)', 'Digital patterns (1-2-3-5)'],
+  ['1-2-3-5, 3-5-7-9, 5-3-2-1 über jeden Akkord eines II–V–I; Coltrane-Stil, z. B. über Giant Steps.',
+   '1-2-3-5, 3-5-7-9, 5-3-2-1 over each chord of a ii–V–I; Coltrane style, e.g. over Giant Steps.'],
+  { cy: [5, 'manual'] });
+L('vb-blues', 'vocab', ['jazz', 'guitar'], 10,
+  ['Blues-Vocabulary', 'Blues vocabulary'],
+  ['Blue Notes, Call & Response, Phrasen über den 12-Takt-Blues – nicht nur in F und Bb, sondern in allen Tonarten.',
+   'Blue notes, call & response, phrases over the 12-bar blues – not just in F and Bb, but in every key.'],
+  { cy: [5, 'manual'] });
+
+// ---- Transcription
+L('tr-full', 'transcription', ['jazz', 'all'], 15,
+  ['Transkription: hören, singen, spielen', 'Transcription: listen, sing, play'],
+  ['Kurzen Ausschnitt (4–8 Takte) oft hören, ohne Instrument mitsingen, dann am Instrument finden. Tempo verlangsamen (z. B. Transcribe!, Amazing Slow Downer).',
+   'Listen to a short excerpt (4–8 bars) many times, sing along without the instrument, then find it on the instrument. Slow it down (e.g. Transcribe!, Amazing Slow Downer).']);
+L('tr-sing', 'transcription', ['jazz', 'voice', 'all'], 8,
+  ['Solo mitsingen', 'Sing along with a solo'],
+  ['Phrasierung, Artikulation und Time-Feel nachsingen, bis es exakt mit der Aufnahme übereinstimmt.',
+   'Sing the phrasing, articulation and time feel until it matches the recording exactly.']);
+L('tr-analyze', 'transcription', ['jazz'], 10,
+  ['Transkription analysieren & ins Vocabulary übernehmen', 'Analyze a transcription & add it to your vocabulary'],
+  ['Welche Akkordtöne, Enclosures, Skalen? Die Lieblingsphrase herausnehmen und in 12 Tonarten üben.',
+   'Which chord tones, enclosures, scales? Take your favourite phrase and practice it in 12 keys.'],
+  { cy: [5, 'manual'] });
+L('tr-playalong', 'transcription', ['jazz', 'all'], 10,
+  ['Mit der Aufnahme mitspielen', 'Play along with the recording'],
+  ['Das transkribierte Solo zusammen mit dem Original spielen – Ziel: Man hört sich selbst nicht mehr heraus.',
+   'Play the transcribed solo together with the original – the goal: you can no longer hear yourself.']);
+L('tr-comping', 'transcription', ['jazz', 'piano', 'guitar'], 10,
+  ['Comping transkribieren', 'Transcribe comping'],
+  ['Voicings und Rhythmen eines Pianisten oder Gitarristen heraushören (z. B. Wynton Kelly, Red Garland, Freddie Green).',
+   'Figure out a pianist’s or guitarist’s voicings and rhythms by ear (e.g. Wynton Kelly, Red Garland, Freddie Green).']);
+
+// ---- Technique
+L('te-piano-warm', 'technique', ['piano', 'jazz'], 5,
+  ['Aufwärmen am Klavier', 'Piano warm-up'],
+  ['Fünffingerübungen, Daumenuntersatz, Akkord-Arpeggien – lockeres Handgelenk, langsam und gleichmäßig.',
+   'Five-finger patterns, thumb-under, chord arpeggios – loose wrist, slow and even.']);
+L('te-hanon', 'technique', ['piano', 'classical'], 10,
+  ['Fingerübungen (Hanon / Czerny)', 'Finger exercises (Hanon / Czerny)'],
+  ['Gleichmäßigkeit und Unabhängigkeit; auch punktiert und mit verschiedenen Anschlägen (legato, staccato). Tempo erst steigern, wenn es sauber ist.',
+   'Evenness and independence; also in dotted rhythms and different touches (legato, staccato). Only increase the tempo when it is clean.'],
+  { bpm: 80 });
+L('te-etude', 'technique', ['classical', 'piano', 'strings', 'winds', 'guitar'], 15,
+  ['Etüde', 'Etude'],
+  ['Eine Etüde passend zum aktuellen Technik-Thema. Schwierige Takte isolieren und langsam wiederholen.',
+   'An etude that matches your current technical focus. Isolate difficult bars and repeat them slowly.']);
+L('te-longtones', 'technique', ['winds', 'jazz'], 7,
+  ['Lange Töne', 'Long tones'],
+  ['Jeden Ton ruhig ansetzen, crescendo und decrescendo, Stimmgerät im Blick. Klangqualität vor Lautstärke.',
+   'Start every note calmly, crescendo and decrescendo, keep an eye on the tuner. Tone quality before volume.']);
+L('te-breath', 'technique', ['winds', 'voice'], 3,
+  ['Atemübungen', 'Breathing exercises'],
+  ['Tief in den Bauch einatmen, langsam auf „ssss“ ausatmen (z. B. 4 Schläge ein, 8 aus). Schultern locker.',
+   'Breathe low into the belly, exhale slowly on “ssss” (e.g. 4 beats in, 8 out). Relaxed shoulders.'],
+  { bpm: 60 });
+L('te-lipslurs', 'technique', ['winds'], 8,
+  ['Lippenbindungen / Flexibilität', 'Lip slurs / flexibility'],
+  ['Naturtöne ohne Zunge binden, ruhig und gleichmäßig. Holzbläser: Obertöne und große Intervallsprünge.',
+   'Slur through the harmonic series without tonguing, calm and even. Woodwinds: overtones and wide interval leaps.']);
+L('te-artic', 'technique', ['winds'], 7,
+  ['Artikulation & Zunge', 'Articulation & tonguing'],
+  ['Staccato, Legato und Doppelzunge erst auf einem Ton, dann auf Tonleitern. Mit Metronom langsam steigern.',
+   'Staccato, legato and double tonguing first on one note, then on scales. Increase slowly with the metronome.'],
+  { bpm: 90 });
+L('te-picking', 'technique', ['guitar'], 5,
+  ['Picking-Technik', 'Picking technique'],
+  ['Wechselschlag auf einer Saite, Saitenwechsel, Spider-Übungen. Mit Metronom und kleinen Bewegungen.',
+   'Alternate picking on one string, string crossing, spider exercises. With the metronome and small motions.'],
+  { bpm: 90 });
+L('te-chordchange', 'technique', ['guitar'], 10,
+  ['Akkordwechsel & Voicings', 'Chord changes & voicings'],
+  ['Zwei Akkorde im Wechsel, Wechsel pro Minute zählen (One-Minute-Changes). Finger zuerst auf gemeinsame Töne.',
+   'Alternate two chords and count changes per minute (one-minute changes). Keep common fingers down first.']);
+L('te-giuliani', 'technique', ['guitar', 'classical'], 10,
+  ['Arpeggio-Übungen (Giuliani)', 'Arpeggio studies (Giuliani)'],
+  ['Giulianis 120 Studien für die rechte Hand: p-i-m-a-Muster, gleichmäßiger Klang, unabhängiger Daumen.',
+   'Giuliani’s 120 right-hand studies: p-i-m-a patterns, even tone, independent thumb.']);
+L('te-strings-pos', 'technique', ['strings', 'classical'], 10,
+  ['Lagenspiel & Intonation', 'Shifting & intonation'],
+  ['Lagenwechsel langsam mit Hilfston, gegen einen Bordunton (Drone) intonieren.',
+   'Slow shifts with a guide note, tuning against a drone.']);
+L('te-strings-bow', 'technique', ['strings', 'classical'], 10,
+  ['Bogentechnik & Artikulation', 'Bowing & articulation'],
+  ['Leere Saiten mit ganzen Bögen, Détaché, Martelé, Spiccato. Kontaktstelle und Bogengeschwindigkeit bewusst steuern.',
+   'Open strings with whole bows, détaché, martelé, spiccato. Control contact point and bow speed consciously.']);
+L('te-voice-warm', 'technique', ['voice'], 10,
+  ['Einsingen (Lip Trills, Sirenen)', 'Vocal warm-up (lip trills, sirens)'],
+  ['Lippenflattern, Sirenen über den ganzen Umfang, Summen. Ohne Druck, locker im Kehlkopf.',
+   'Lip trills, sirens across your whole range, humming. No pressure, relaxed larynx.']);
+L('te-diction', 'technique', ['voice'], 5,
+  ['Diktion & Vokale', 'Diction & vowels'],
+  ['Text erst sprechen, dann auf einem Ton singen; Vokale ausgleichen, Konsonanten klar.',
+   'Speak the lyrics first, then sing them on one pitch; even out vowels, crisp consonants.']);
+L('te-rudiments', 'technique', ['drums'], 10,
+  ['Rudiments', 'Rudiments'],
+  ['Single und Double Stroke, Paradiddle, Flam, Drag – langsam, gleichmäßig, klare Akzente.',
+   'Single and double strokes, paradiddle, flam, drag – slow, even, clear accents.'],
+  { bpm: 80 });
+L('te-indep', 'technique', ['drums'], 10,
+  ['Koordination & Unabhängigkeit', 'Coordination & independence'],
+  ['Ostinato mit den Füßen, darüber Lesestudien mit den Händen (z. B. „Syncopation“ von Ted Reed).',
+   'An ostinato with the feet, reading studies with the hands on top (e.g. Ted Reed’s “Syncopation”).']);
+L('te-fills', 'technique', ['drums'], 10,
+  ['Fills', 'Fills'],
+  ['Ein-Takt-Fills, die sauber auf die 1 zurückführen: Groove – Fill – Groove.',
+   'One-bar fills that land cleanly back on beat 1: groove – fill – groove.']);
+
+// ---- Rhythm & time
+L('rh-24', 'rhythm', ['jazz', 'all'], 8,
+  ['Time: Metronom nur auf 2 & 4', 'Time: metronome only on 2 & 4'],
+  ['Im Metronom „Nur 2 & 4“ wählen. Skalen oder einen Standard dazu spielen – das Swing-Feel kommt aus dem Off-Beat.',
+   'Choose “Only 2 & 4” in the metronome. Play scales or a standard against it – the swing feel comes from the backbeat.'],
+  { bpm: 80 });
+L('rh-gap', 'rhythm', ['all'], 8,
+  ['Timing-Test mit stummen Takten', 'Timing test with silent bars'],
+  ['Im Metronom z. B. 2 Takte hörbar und 2 Takte stumm einstellen. Weiterspielen und prüfen, ob du beim Wiedereinsatz genau auf dem Klick bist.',
+   'Set the metronome to e.g. 2 audible and 2 silent bars. Keep playing and check whether you are right on the click when it comes back.']);
+L('rh-comping', 'rhythm', ['jazz', 'piano', 'guitar'], 10,
+  ['Comping-Rhythmen', 'Comping rhythms'],
+  ['Charleston, Vorziehen auf die „und“ von 4, Red-Garland-Rhythmen. Erst auf einem Akkord, dann durch einen Blues.',
+   'Charleston, anticipating the “and” of 4, Red Garland rhythms. First on one chord, then through a blues.']);
+L('rh-grooves', 'rhythm', ['drums', 'guitar'], 10,
+  ['Grooves', 'Grooves'],
+  ['Swing, Bossa, Funk, Shuffle – jeweils 2 Minuten mit Metronom, entspannt und konstant.',
+   'Swing, bossa, funk, shuffle – 2 minutes each with the metronome, relaxed and steady.']);
+L('rh-strum', 'rhythm', ['guitar'], 8,
+  ['Rhythmus & Strumming', 'Rhythm & strumming'],
+  ['Strumming-Pattern mit durchlaufender Hand (Ab-Auf), Akzente und Ghost Strokes.',
+   'Strumming patterns with a constant down-up hand, accents and ghost strokes.']);
+
+// ---- Ear training
+L('ea-intervals', 'ear', ['all', 'voice'], 5,
+  ['Intervalle singen & erkennen', 'Sing & recognize intervals'],
+  ['Intervalle vom Grundton singen und am Instrument kontrollieren; dann per App erkennen (z. B. Functional Ear Trainer).',
+   'Sing intervals from a root and check them on your instrument; then identify them with an app (e.g. Functional Ear Trainer).']);
+L('ea-chords', 'ear', ['all'], 5,
+  ['Akkordqualitäten erkennen', 'Recognize chord qualities'],
+  ['maj7, 7, m7, m7b5, dim7 hören und benennen – zuerst in Grundstellung, dann in Umkehrungen.',
+   'Hear and name maj7, 7, m7, m7b5, dim7 – root position first, then inversions.']);
+L('ea-prog', 'ear', ['all', 'jazz'], 10,
+  ['Akkordfolgen erkennen', 'Recognize progressions'],
+  ['II–V–I, I–VI–II–V, Blues: die Bassbewegung hören und mitsingen, Funktionen benennen.',
+   'ii–V–I, I–vi–ii–V, blues: hear and sing the bass movement, name the functions.']);
+L('ea-melody12', 'ear', ['all', 'jazz'], 10,
+  ['Melodie nach Gehör in 12 Tonarten', 'Play a melody by ear in 12 keys'],
+  ['Ein einfaches Lied oder eine Standard-Melodie ohne Noten in jeder Tonart spielen.',
+   'Play a simple song or a standard melody without sheet music in every key.'],
+  { cy: [5, 'manual'] });
+
+// ---- Repertoire
+L('re-standard', 'repertoire', ['jazz', 'piano'], 15,
+  ['Standard: Melodie, Comping, Solo', 'Standard: melody, comping, solo'],
+  ['Melodie auswendig, links Voicings und rechts Melodie, dann Comping zum Play-along (z. B. iReal Pro) und über die Form improvisieren.',
+   'Melody from memory, voicings left and melody right, then comp with a play-along (e.g. iReal Pro) and improvise over the form.']);
+L('re-improv', 'repertoire', ['jazz', 'all'], 15,
+  ['Improvisation über einen Standard', 'Improvise over a standard'],
+  ['Mit Play-along über die Form; Einschränkungen helfen: nur Akkordtöne, nur Viertel, 2 Takte spielen + 2 Takte Pause.',
+   'With a play-along over the form; limits help: chord tones only, quarter notes only, 2 bars playing + 2 bars rest.']);
+L('re-sections', 'repertoire', ['classical', 'piano', 'strings', 'winds', 'guitar'], 20,
+  ['Repertoire abschnittsweise & langsam', 'Repertoire in sections, slowly'],
+  ['Schwierige Stellen markieren, langsam mit Metronom, Tempo in kleinen Schritten steigern. Klavier: Hände getrennt, dann zusammen.',
+   'Mark difficult passages, play slowly with the metronome, increase the tempo in small steps. Piano: hands separately, then together.'],
+  { bpm: 60 });
+L('re-sightread', 'repertoire', ['classical', 'piano', 'all'], 10,
+  ['Blattspiel', 'Sight-reading'],
+  ['Jeden Tag etwas Neues, leichter als dein Niveau. Nicht anhalten – den Puls halten.',
+   'Something new every day, easier than your level. Don’t stop – keep the pulse.']);
+L('re-runthrough', 'repertoire', ['classical', 'all'], 10,
+  ['Durchspielen / Vortrag', 'Run-through / performance'],
+  ['Wie im Konzert ohne Unterbrechung spielen, gern aufnehmen und danach anhören.',
+   'Play without stopping as if on stage; record it and listen back.']);
+L('re-songs', 'repertoire', ['guitar', 'drums', 'voice', 'all'], 15,
+  ['Songs / Mitspielen', 'Songs / play-along'],
+  ['Zu Aufnahmen oder Backing Tracks mitspielen, auf Form und Dynamik achten.',
+   'Play along with recordings or backing tracks, paying attention to form and dynamics.']);
+L('re-voice', 'repertoire', ['voice'], 20,
+  ['Repertoire singen', 'Sing repertoire'],
+  ['Song in Abschnitten: Text, Melodie, Atemstellen festlegen; dann mit Begleitung.',
+   'Work on a song in sections: lyrics, melody, breathing spots; then with accompaniment.']);
+
+const CAT_ORDER = ['scales', 'voicings', 'vocab', 'transcription', 'technique', 'rhythm', 'ear', 'repertoire'];
+const TAG_ORDER = ['jazz', 'piano', 'classical', 'guitar', 'winds', 'strings', 'voice', 'drums'];
+
+// ---- Built-in presets: [libraryId, minutes]
+const BUILTIN = [
+  { id: 'jazzPiano', name: { de: 'Jazz-Klavier (Standard)', en: 'Jazz piano (default)' },
+    units: [['te-piano-warm', 5], ['sc-jazz-mix', 10], ['vo-rootless', 15], ['vb-lick12', 10], ['tr-full', 15], ['re-standard', 15]] },
+  { id: 'jazzPianoBH', name: { de: 'Jazz-Klavier: Barry Harris', en: 'Jazz piano: Barry Harris' },
+    units: [['te-piano-warm', 5], ['sc-bh-major', 8], ['sc-bh-dom', 8], ['sc-bh-minor', 6], ['vo-bh-6dim', 12], ['vb-enclosure', 8], ['re-standard', 15]] },
+  { id: 'jazzAll', name: { de: 'Jazz (alle Instrumente)', en: 'Jazz (all instruments)' },
+    units: [['te-longtones', 5], ['sc-arp', 10], ['vb-guide', 10], ['vb-lick12', 10], ['tr-full', 15], ['re-improv', 15]] },
+  { id: 'classicPiano', name: { de: 'Klassik-Klavier', en: 'Classical piano' },
+    units: [['te-hanon', 10], ['sc-classic', 10], ['te-etude', 15], ['re-sections', 20], ['re-sightread', 10], ['re-runthrough', 10]] },
+  { id: 'classicStrings', name: { de: 'Klassik: Streicher', en: 'Classical: strings' },
+    units: [['sc-classic', 10], ['te-strings-pos', 10], ['te-strings-bow', 10], ['te-etude', 15], ['re-sections', 20]] },
+  { id: 'guitarJazzPop', name: { de: 'Gitarre (Jazz/Pop)', en: 'Guitar (jazz/pop)' },
+    units: [['te-picking', 5], ['sc-caged', 10], ['te-chordchange', 10], ['rh-comping', 10], ['vb-lick12', 10], ['re-songs', 15]] },
+  { id: 'guitarClassic', name: { de: 'Klassische Gitarre', en: 'Classical guitar' },
+    units: [['te-giuliani', 10], ['sc-segovia', 10], ['te-etude', 15], ['re-sections', 20]] },
+  { id: 'winds', name: { de: 'Blasinstrumente', en: 'Winds & brass' },
+    units: [['te-breath', 3], ['te-longtones', 7], ['te-lipslurs', 8], ['te-artic', 7], ['sc-classic', 10], ['te-etude', 10], ['re-sections', 15]] },
+  { id: 'voice', name: { de: 'Gesang', en: 'Voice' },
+    units: [['te-breath', 5], ['te-voice-warm', 10], ['ea-intervals', 5], ['te-diction', 5], ['re-voice', 20]] },
+  { id: 'drums', name: { de: 'Schlagzeug', en: 'Drums' },
+    units: [['te-rudiments', 10], ['rh-grooves', 10], ['te-indep', 10], ['te-fills', 10], ['re-songs', 15]] },
+  { id: 'ear', name: { de: 'Gehörbildung', en: 'Ear training' },
+    units: [['ea-intervals', 5], ['ea-chords', 5], ['ea-prog', 10], ['ea-melody12', 10]] }
+];
+
+// =====================================================================
+// State
+// =====================================================================
+let units = [];          // {id, name, minutes, tip, bpm, cycle, lib, nameEdited, tipEdited}
+let unitCounter = 0;
+let openDetails = new Set();
+let currentPresetRef = null; // {type:'builtin', id} | {type:'user', name}
+let libFilter = 'jazz';
+
 let currentIndex = 0;
 let timerRafId = null;
 let remainingSeconds = 0;
 let isRunning = false;
 let isPaused = false;
 let totalPracticeMs = 0;
-let accumulatedSectionMs = 0;
 let lastTick = 0;
-let fieldCounter = 0;
 let lastBeepSecond = -1;
 let audioCtx = null;
 let wakeLock = null;
-let hiddenSinceMs = 0;
 
-const defaultPreset = {
-  name: "Standard Practice Routine",
-  sections: [
-    { name: "Warm-up / Long tones", minutes: 5 },
-    { name: "Scales / Arpeggios", minutes: 10 },
-    { name: "Finger Exercises", minutes: 10 },
-    { name: "Etude / Technique", minutes: 15 },
-    { name: "Repertoire Practice", minutes: 15 }
-  ]
-};
+// key cycle runtime
+let cyc = null; // {seq, groupLen, idx, manualOffset}
+let unitDownbeats = 0;
 
-// ========= Audio =========
-function getAudioCtx() {
+function makeUnitFromLib(libId, minutes) {
+  const it = LIB[libId];
+  return {
+    id: ++unitCounter,
+    lib: libId,
+    name: it.name[lang],
+    tip: it.tip[lang],
+    minutes: minutes || it.minutes,
+    bpm: it.bpm || null,
+    cycle: it.cycle ? Object.assign({}, it.cycle) : null
+  };
+}
+function normalizeUnit(s) {
+  return {
+    id: ++unitCounter,
+    lib: s.lib || null,
+    name: s.name || '',
+    tip: s.tip || '',
+    minutes: Math.max(1, parseInt(s.minutes, 10) || 1),
+    bpm: s.bpm ? clampInt(s.bpm, 20, 300) : null,
+    cycle: s.cycle ? Object.assign({ semi: 5, start: 0, mode: 'manual', bars: 4 }, s.cycle) : null,
+    nameEdited: !!s.nameEdited,
+    tipEdited: !!s.tipEdited
+  };
+}
+function unitForStorage(u) {
+  const o = { name: u.name, minutes: u.minutes };
+  if (u.tip) o.tip = u.tip;
+  if (u.bpm) o.bpm = u.bpm;
+  if (u.cycle) o.cycle = u.cycle;
+  if (u.lib) { o.lib = u.lib; if (u.nameEdited) o.nameEdited = true; if (u.tipEdited) o.tipEdited = true; }
+  return o;
+}
+function displayName(u, idx) { return (u.name && u.name.trim()) || t('unnamed', { n: idx + 1 }); }
+
+// Re-translate library-based units when the language changes
+function retranslateUnits() {
+  units.forEach(u => {
+    if (u.lib && LIB[u.lib]) {
+      if (!u.nameEdited) u.name = LIB[u.lib].name[lang];
+      if (!u.tipEdited) u.tip = LIB[u.lib].tip[lang];
+    }
+  });
+}
+
+// =====================================================================
+// Audio
+// =====================================================================
+function ensureAudioCtx() {
+  // MUST be called synchronously from a user gesture on iOS
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new Ctx();
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
-
-// ========= Wake Lock (keeps screen on while timer runs) =========
-let wakeLockPollInterval = null;
-
-async function requestWakeLock() {
-  if (!('wakeLock' in navigator)) {
-    console.log('Wake Lock API not supported in this browser');
-    return false;
-  }
-  try {
-    if (wakeLock === null || wakeLock.released) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => {
-        console.log('Wake lock released by system');
-        wakeLock = null;
-      });
-      console.log('Wake lock acquired - screen will stay on');
-    }
-    // Poll every 10s to re-acquire if released
-    if (!wakeLockPollInterval) {
-      wakeLockPollInterval = setInterval(async () => {
-        if (isRunning && !isPaused && document.visibilityState === 'visible') {
-          if (!wakeLock || wakeLock.released) {
-            try {
-              wakeLock = await navigator.wakeLock.request('screen');
-              console.log('Wake lock re-acquired');
-            } catch(e) {}
-          }
-        }
-      }, 10000);
-    }
-    return true;
-  } catch (e) {
-    console.log('Wake lock failed:', e.message);
-    return false;
-  }
-}
-
-function releaseWakeLock() {
-  if (wakeLockPollInterval) {
-    clearInterval(wakeLockPollInterval);
-    wakeLockPollInterval = null;
-  }
-  if (wakeLock) {
-    try { wakeLock.release(); } catch(e) {}
-    wakeLock = null;
-  }
-}
-
-// Re-acquire wake lock when page becomes visible again
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    if (isRunning && !isPaused) {
-      requestWakeLock();
-    }
-    // Resume audio context if it got suspended while in background
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-  } else {
-    if (isRunning && !isPaused) {
-      hiddenSinceMs = Date.now();
-    }
-  }
-});
+const getAudioCtx = ensureAudioCtx;
 
 function playBeep(freq = 880, duration = 0.15, volume = 0.3) {
   try {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = freq;
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = freq;
     gain.gain.setValueAtTime(0, ctx.currentTime);
     gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
-  } catch(e) {}
+    osc.start(); osc.stop(ctx.currentTime + duration);
+  } catch (e) {}
 }
-
-function playCountdownBeep() {
-  playBeep(880, 0.12, 0.3);
-}
-
-function playFinalBeep() {
-  playBeep(1320, 0.25, 0.35);
-}
-
+function playCountdownBeep() { if (settings.beeps) playBeep(880, 0.12, 0.3); }
+function playFinalBeep() { if (settings.beeps) playBeep(1320, 0.25, 0.35); }
 function playSectionCompleteSound() {
-  // Pleasant ascending chime
-  const notes = [523.25, 659.25, 783.99, 1046.50];
-  notes.forEach((freq, i) => {
-    setTimeout(() => playBeep(freq, 0.25, 0.25), i * 120);
-  });
+  [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => setTimeout(() => playBeep(f, 0.25, 0.25), i * 120));
 }
+function playKeyChangeChime() { playBeep(1174.66, 0.18, 0.22); setTimeout(() => playBeep(1567.98, 0.22, 0.2), 110); }
 
 function playApplause() {
   try {
@@ -1032,563 +1203,825 @@ function playApplause() {
     const bufferSize = ctx.sampleRate * 4;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.8);
-    }
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 2500;
-    filter.Q.value = 0.5;
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.8);
+    const source = ctx.createBufferSource(); source.buffer = buffer;
+    const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 2500; filter.Q.value = 0.5;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0, ctx.currentTime);
     gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.3);
     gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 2.5);
     gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 4);
-    source.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    source.start();
-    source.stop(ctx.currentTime + 4);
-  } catch(e) {}
+    source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    source.start(); source.stop(ctx.currentTime + 4);
+  } catch (e) {}
 }
-
 function playJubilation() {
-  // Cheer-like whoops with fanfare
   try {
     const ctx = getAudioCtx();
-    // Cheering crowd
     const bufferSize = ctx.sampleRate * 3;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.5) * 0.6;
-    }
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = 1800;
-    filter.Q.value = 0.8;
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.5) * 0.6;
+    const source = ctx.createBufferSource(); source.buffer = buffer;
+    const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 1800; filter.Q.value = 0.8;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0, ctx.currentTime);
     gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.2);
     gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 2);
     gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 3);
-    source.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    source.start();
-    source.stop(ctx.currentTime + 3);
-
-    // Triumphant fanfare
-    const fanfare = [
-      { f: 523.25, t: 0 },    // C5
-      { f: 659.25, t: 0.15 }, // E5
-      { f: 783.99, t: 0.3 },  // G5
-      { f: 1046.50, t: 0.45 }, // C6
-      { f: 783.99, t: 0.7 },  // G5
-      { f: 1046.50, t: 0.85 },// C6
-      { f: 1318.51, t: 1.0 }  // E6
-    ];
-    fanfare.forEach(({f, t}) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.connect(g);
-      g.connect(ctx.destination);
-      osc.type = 'triangle';
-      osc.frequency.value = f;
-      g.gain.setValueAtTime(0, ctx.currentTime + t);
-      g.gain.linearRampToValueAtTime(0.2, ctx.currentTime + t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.4);
-      osc.start(ctx.currentTime + t);
-      osc.stop(ctx.currentTime + t + 0.4);
+    source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    source.start(); source.stop(ctx.currentTime + 3);
+    [[523.25, 0], [659.25, 0.15], [783.99, 0.3], [1046.5, 0.45], [783.99, 0.7], [1046.5, 0.85], [1318.51, 1.0]].forEach(([f, tm]) => {
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.type = 'triangle'; osc.frequency.value = f;
+      g.gain.setValueAtTime(0, ctx.currentTime + tm);
+      g.gain.linearRampToValueAtTime(0.2, ctx.currentTime + tm + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + tm + 0.4);
+      osc.start(ctx.currentTime + tm); osc.stop(ctx.currentTime + tm + 0.4);
     });
-  } catch(e) {}
+  } catch (e) {}
 }
 
-// ========= Metronome (iOS-Safari friendly) =========
-let metronomeBpm = 120;
+// =====================================================================
+// Wake lock (keeps the screen on while the timer runs)
+// =====================================================================
+let wakeLockPollInterval = null;
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return false;
+  try {
+    if (wakeLock === null || wakeLock.released) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+    if (!wakeLockPollInterval) {
+      wakeLockPollInterval = setInterval(async () => {
+        if (isRunning && !isPaused && document.visibilityState === 'visible' && (!wakeLock || wakeLock.released)) {
+          try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+        }
+      }, 10000);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function releaseWakeLock() {
+  if (wakeLockPollInterval) { clearInterval(wakeLockPollInterval); wakeLockPollInterval = null; }
+  if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; }
+}
+
+// =====================================================================
+// Metronome (lookahead scheduler, iOS-Safari friendly)
+// =====================================================================
+let metro = Object.assign({ bpm: 120, vol: 0.7, beats: 4, accent: 'one', playBars: 0, muteBars: 0 }, JSON.parse(localStorage.getItem('ppMetro') || '{}'));
 let metronomeOn = false;
-let metronomeVolume = 0.7;
-let metronomeBeat = 0;
+let mBeat = 0;
 let metronomeTimerId = null;
 let metronomeNextClickTime = 0;
+let tapTimes = [];
+let visualTimeouts = [];
 
-function ensureAudioCtx() {
-  // MUST be called synchronously from a user gesture on iOS
-  if (!audioCtx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new Ctx();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-  return audioCtx;
-}
+function saveMetro() { localStorage.setItem('ppMetro', JSON.stringify(metro)); }
 
 function playClickAt(time, freq, vol) {
-  // Schedules a single click sound at the given audioContext time
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.type = 'sine';
-  osc.frequency.value = freq;
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.type = 'sine'; osc.frequency.value = freq;
   gain.gain.setValueAtTime(0, time);
   gain.gain.linearRampToValueAtTime(vol, time + 0.002);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
-  osc.start(time);
-  osc.stop(time + 0.06);
+  osc.start(time); osc.stop(time + 0.06);
 }
 
-function playImmediateClick() {
-  // Plays a click RIGHT NOW (must be inside the user gesture handler for iOS)
-  const ctx = ensureAudioCtx();
-  playClickAt(ctx.currentTime, 1000, metronomeVolume * 0.4);
+function setBpm(v) {
+  metro.bpm = clampInt(v, 20, 300);
+  document.getElementById('bpmValue').textContent = metro.bpm;
+  document.getElementById('bpmSlider').value = metro.bpm;
+  saveMetro();
 }
-
-function updateBpm(value) {
-  metronomeBpm = parseInt(value);
-  document.getElementById('bpmValue').textContent = metronomeBpm;
+function setMetro(key, value) {
+  metro[key] = value;
+  if (key === 'beats') { mBeat = 0; renderBeatDots(); }
+  saveMetro();
+  renderMetroStatus();
 }
-
 function toggleMetronome() {
-  // This runs INSIDE a user gesture (onchange from checkbox tap)
-  // so we must create audio context and play the first click here
+  // Runs inside a user gesture -> create/resume the audio context here (iOS)
   ensureAudioCtx();
-  playImmediateClick();
-
   metronomeOn = document.getElementById('metronomeToggle').checked;
-  if (metronomeOn) {
-    startMetronome();
-  } else {
-    stopMetronome();
-  }
+  if (metronomeOn) startMetronome(); else stopMetronome();
+  updateCycleHint();
 }
-
 function startMetronome() {
   if (!audioCtx) return;
-  metronomeBeat = 0;
-  metronomeNextClickTime = audioCtx.currentTime + 0.12; // small lead time
+  mBeat = 0;
+  metronomeNextClickTime = audioCtx.currentTime + 0.08;
   if (metronomeTimerId) clearTimeout(metronomeTimerId);
-  // Use setTimeout, scheduled in ms relative to now
   scheduleNextClick();
 }
-
 function stopMetronome() {
-  if (metronomeTimerId) {
-    clearTimeout(metronomeTimerId);
-    metronomeTimerId = null;
-  }
+  if (metronomeTimerId) { clearTimeout(metronomeTimerId); metronomeTimerId = null; }
+  visualTimeouts.forEach(clearTimeout); visualTimeouts = [];
+  document.querySelectorAll('.beat-dot').forEach(d => d.classList.remove('hit', 'muted'));
+  renderMetroStatus();
 }
-
+function isBarMuted(bar) {
+  const p = metro.playBars, m = metro.muteBars;
+  if (!(p > 0 && m > 0)) return false;
+  return (bar % (p + m)) >= p;
+}
 function scheduleNextClick() {
   if (!metronomeOn || !audioCtx) return;
-
-  // Schedule all clicks that should happen in the next 100ms
   while (metronomeNextClickTime < audioCtx.currentTime + 0.1) {
-    playClickAt(metronomeNextClickTime, 1000, metronomeVolume * 0.4);
-    metronomeNextClickTime += 60.0 / metronomeBpm;
-    metronomeBeat++;
-  }
+    const beats = metro.beats;
+    const beatInBar = mBeat % beats;
+    const bar = Math.floor(mBeat / beats);
+    const muted = isBarMuted(bar);
+    let keyChange = false;
 
-  // Wake up shortly to schedule the next batch
+    // Bar counting for "change key every N bars"
+    if (beatInBar === 0 && isRunning && !isPaused) {
+      unitDownbeats++;
+      const sec = units[currentIndex];
+      if (sec && sec.cycle && sec.cycle.mode === 'bars' && cyc) {
+        const n = Math.max(1, sec.cycle.bars || 4);
+        if (unitDownbeats > 1 && (unitDownbeats - 1) % n === 0) keyChange = true;
+      }
+    }
+
+    let freq = 1000, v = 0.4, play = true;
+    if (metro.accent === 'one' && beats > 1) {
+      if (beatInBar === 0) { freq = 1500; v = 0.55; }
+      else if (beats === 6 && beatInBar === 3) { freq = 1250; v = 0.45; }
+    } else if (metro.accent === 'twofour') {
+      play = beats >= 2 && beatInBar % 2 === 1;
+    }
+    if (keyChange) { freq = 2000; v = 0.6; play = true; }
+    if (play && !muted) playClickAt(metronomeNextClickTime, freq, metro.vol * v);
+
+    const delay = Math.max(0, (metronomeNextClickTime - audioCtx.currentTime) * 1000);
+    const vb = beatInBar, vm = muted, vbar = bar;
+    visualTimeouts.push(setTimeout(() => flashBeat(vb, vm, vbar), delay));
+    if (keyChange) visualTimeouts.push(setTimeout(() => nextKey(false), delay));
+    if (visualTimeouts.length > 64) visualTimeouts = visualTimeouts.slice(-32);
+
+    metronomeNextClickTime += 60.0 / metro.bpm;
+    mBeat++;
+  }
   metronomeTimerId = setTimeout(scheduleNextClick, 25);
 }
-
+function renderBeatDots() {
+  const el = document.getElementById('beatDots');
+  const n = metro.beats;
+  el.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'beat-dot' + (i === 0 && n > 1 && metro.accent === 'one' ? ' accent' : '');
+    el.appendChild(d);
+  }
+}
+function flashBeat(beatInBar, muted, bar) {
+  const dots = document.querySelectorAll('.beat-dot');
+  dots.forEach((d, i) => { d.classList.toggle('hit', i === beatInBar); d.classList.toggle('muted', muted); });
+  const st = document.getElementById('metroStatus');
+  const p = metro.playBars, m = metro.muteBars;
+  let txt = t('bar', { n: bar + 1 });
+  if (p > 0 && m > 0) txt = t('bar', { n: (bar % (p + m)) + 1 }) + ' / ' + (p + m);
+  if (muted) txt += ' · ' + t('mutedNow');
+  st.textContent = txt;
+  st.classList.toggle('muted', muted);
+}
+function renderMetroStatus() {
+  const st = document.getElementById('metroStatus');
+  if (!metronomeOn) { st.textContent = t('metroOff'); st.classList.remove('muted'); }
+  renderBeatDots();
+}
+function tapTempo() {
+  ensureAudioCtx();
+  const now = performance.now();
+  if (tapTimes.length && now - tapTimes[tapTimes.length - 1] > 2000) tapTimes = [];
+  tapTimes.push(now);
+  if (tapTimes.length > 6) tapTimes.shift();
+  playClickAt(audioCtx.currentTime, 1200, metro.vol * 0.3);
+  if (tapTimes.length >= 2) {
+    const avg = (tapTimes[tapTimes.length - 1] - tapTimes[0]) / (tapTimes.length - 1);
+    setBpm(Math.round(60000 / avg));
+  }
+}
 function adjustVolume(delta) {
-  metronomeVolume = Math.max(0, Math.min(1, metronomeVolume + delta));
-  const bar = document.getElementById('volumeBar');
-  if (bar) bar.style.width = (metronomeVolume * 100) + '%';
+  metro.vol = Math.max(0, Math.min(1, Math.round((metro.vol + delta) * 10) / 10));
+  document.getElementById('volumeBar').style.width = (metro.vol * 100) + '%';
+  saveMetro();
 }
 
-// Re-activate audio on any user interaction (helps iOS resume from suspend)
+// Resume audio after interaction / when coming back to the page (iOS)
 ['touchstart', 'touchend', 'click', 'keydown'].forEach(evt => {
-  document.addEventListener(evt, () => {
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-  }, { passive: true });
+  document.addEventListener(evt, () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { passive: true });
 });
-
-// Re-activate audio when the page becomes visible again
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-    // Restart the metronome scheduler if it was on
-    if (metronomeOn) {
-      startMetronome();
-    }
+    if (isRunning && !isPaused) requestWakeLock();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (metronomeOn) startMetronome();
   }
 });
 
-// Stop metronome on stopTimer
-const _origStopTimer = stopTimer;
-// Wrap stopTimer to also stop metronome? Actually leave metronome independent.
-
-// ========= Init =========
-function init() {
-  loadPresetList();
-  loadDefaultPreset();
-  // Initialize volume bar
-  const bar = document.getElementById('volumeBar');
-  if (bar) bar.style.width = (metronomeVolume * 100) + '%';
-}
-
-// ========= Section collapse =========
-function toggleSection(id) {
-  document.getElementById(id).classList.toggle('collapsed');
-}
-
-// ========= Field management =========
-function addField(name = '', minutes = 5) {
-  fieldCounter++;
-  const section = { name, minutes, id: fieldCounter };
-  practiceSections.push(section);
-  renderFields();
-  renderSummary();
-  renderSectionJumper();
-}
-
-function removeField(id) {
-  practiceSections = practiceSections.filter(s => s.id !== id);
-  renderFields();
-  renderSummary();
-  renderSectionJumper();
-}
-
-function renderFields() {
-  const grid = document.getElementById('fieldsGrid');
-  grid.innerHTML = '';
-  practiceSections.forEach((section, idx) => {
-    const field = document.createElement('div');
-    field.className = 'practice-field';
-    if (isRunning) {
-      if (idx === currentIndex) field.classList.add('current');
-      else if (idx < currentIndex) field.classList.add('completed');
-    }
-    field.innerHTML = `
-      <div class="field-header">
-        <span class="field-number">Unit ${idx + 1}</span>
-        <button class="remove-btn" onclick="removeField(${section.id})" title="Remove">&times;</button>
-      </div>
-      <div class="field-inputs">
-        <input type="text" placeholder="What to practice?" value="${section.name.replace(/"/g, '&quot;')}" onchange="updateSection(${section.id}, 'name', this.value)">
-        <input type="number" min="1" max="120" value="${section.minutes}" onchange="updateSection(${section.id}, 'minutes', parseInt(this.value) || 1)">
-      </div>
-    `;
-    grid.appendChild(field);
-  });
-}
-
-function updateSection(id, key, value) {
-  const section = practiceSections.find(s => s.id === id);
-  if (section) section[key] = value;
-}
-
-// ========= Timer =========
-function startTimer() {
-  const activeSections = practiceSections.filter(s => s.name.trim() && s.minutes > 0);
-  if (activeSections.length === 0) {
-    alert('Please enter at least one unit with a name and minutes.');
-    return;
+// =====================================================================
+// Key cycle runtime
+// =====================================================================
+function resetCycle() {
+  const sec = units[currentIndex];
+  unitDownbeats = 0;
+  if (sec && sec.cycle) {
+    const ks = keySequence(sec.cycle.semi, sec.cycle.start || 0);
+    cyc = { seq: ks.seq, groupLen: ks.groupLen, idx: 0, manualOffset: 0 };
+  } else {
+    cyc = null;
   }
+  renderCycle(false);
+}
+function nextKey(manual) {
+  if (!cyc) return;
+  cyc.idx++;
+  if (manual) cyc.manualOffset++;
+  else playKeyChangeChimeIfQuiet();
+  renderCycle(true);
+}
+function playKeyChangeChimeIfQuiet() {
+  // In "bars" mode the metronome already plays a high click; chime only in "time" mode
+  const sec = units[currentIndex];
+  if (sec && sec.cycle && sec.cycle.mode === 'time') playKeyChangeChime();
+}
+function updateCycleByTime() {
+  const sec = units[currentIndex];
+  if (!cyc || !sec || !sec.cycle || sec.cycle.mode !== 'time') return;
+  const total = sec.minutes * 60;
+  const elapsed = total - remainingSeconds;
+  const target = Math.min(11, Math.floor(elapsed / (total / 12))) + cyc.manualOffset;
+  if (target > cyc.idx) { cyc.idx = target; playKeyChangeChime(); renderCycle(true); }
+}
+function renderCycle(pop) {
+  const box = document.getElementById('keyCycle');
+  const btn = document.getElementById('nextKeyBtn');
+  const sec = units[currentIndex];
+  const active = cyc && sec && sec.cycle && (isRunning || isPaused);
+  box.style.display = active ? '' : 'none';
+  btn.style.display = active ? '' : 'none';
+  if (!active) return;
+  const i = cyc.idx % 12;
+  const round = Math.floor(cyc.idx / 12) + 1;
+  const keyEl = document.getElementById('kcKey');
+  keyEl.textContent = noteName(cyc.seq[i]);
+  if (pop) { keyEl.classList.remove('pop'); void keyEl.offsetWidth; keyEl.classList.add('pop'); }
+  document.getElementById('kcNext').textContent = noteName(cyc.seq[(i + 1) % 12]);
+  document.getElementById('kcLabel').textContent = '🔁 ' + t('intervals')[sec.cycle.semi] + ' · ' + t('keyNofM', { n: i + 1 });
+  document.getElementById('kcRound').textContent = round > 1 ? t('roundN', { n: round }) : '';
+  const chips = document.getElementById('kcChips');
+  let html = '';
+  cyc.seq.forEach((pc, j) => {
+    if (j > 0 && cyc.groupLen < 12 && j % cyc.groupLen === 0) html += '<span class="kc-sep"></span>';
+    const cls = j === i ? 'now' : (j < i ? 'done' : '');
+    html += '<span class="kc-chip ' + cls + '">' + esc(noteName(pc)) + '</span>';
+  });
+  chips.innerHTML = html;
+  updateCycleHint();
+}
+function updateCycleHint() {
+  const sec = units[currentIndex];
+  const hint = document.getElementById('kcHint');
+  if (!hint || !sec || !sec.cycle) return;
+  if (sec.cycle.mode === 'bars') hint.textContent = metronomeOn ? '' : t('cycleHintBars', { n: sec.cycle.bars || 4 });
+  else if (sec.cycle.mode === 'time') hint.textContent = t('cycleHintTime', { s: fmtTime(sec.minutes * 60 / 12) });
+  else hint.textContent = t('cycleHintManual');
+}
 
-  practiceSections = practiceSections.filter(s => s.name.trim() && s.minutes > 0);
+// =====================================================================
+// Timer
+// =====================================================================
+function setControls() {
+  const startBtn = document.getElementById('startBtn');
+  const running = isRunning && !isPaused;
+  startBtn.style.display = running ? 'none' : '';
+  startBtn.innerHTML = '&#9654; <span>' + esc(isPaused ? t('resume') : t('start')) + '</span>';
+  document.getElementById('pauseBtn').style.display = running ? '' : 'none';
+  document.getElementById('pauseBtn').innerHTML = '&#10074;&#10074; <span>' + esc(t('pause')) + '</span>';
+  document.getElementById('stopBtn').style.display = (isRunning || isPaused) ? '' : 'none';
+  document.getElementById('stopBtn').innerHTML = '&#9632; <span class="lbl-opt">' + esc(t('stop')) + '</span>';
+  document.getElementById('skipBtn').style.display = (isRunning || isPaused) ? '' : 'none';
+  document.getElementById('skipBtn').innerHTML = '<span class="lbl-opt">' + esc(t('skip')) + '</span> &#10145;';
+  document.getElementById('nextKeyBtn').innerHTML = '&#128257; <span class="mobile-only">' + esc(t('nextKeyBtn')) + '</span><span class="desktop-only">' + esc(t('nextKeyBtnLong')) + '</span>';
+}
 
+function startTimer() {
+  ensureAudioCtx();
+  if (!units.some(u => u.minutes > 0)) { alert(t('alertNoUnits')); return; }
   if (isPaused) {
-    isPaused = false;
-    isRunning = true;
+    isPaused = false; isRunning = true;
     lastTick = Date.now();
-    accumulatedSectionMs = 0;
-    totalPracticeMs = window._frozenTotalMs || totalPracticeMs;
-    updateTimerDisplay();
-    updateTotalTime();
-    renderFields();
-    renderSummary();
-    renderSectionJumper();
-    document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('pauseBtn').style.display = '';
-    document.getElementById('stopBtn').style.display = '';
+    requestWakeLock();
+    afterStateChange();
     startTickLoop();
     return;
   }
-
-  if (!isRunning) {
-    currentIndex = 0;
-    totalPracticeMs = 0;
-  }
-
+  if (!isRunning) { currentIndex = 0; totalPracticeMs = 0; }
   startCurrentSection();
 }
 
 function startCurrentSection() {
-  const section = practiceSections[currentIndex];
-  if (!section) return;
-
-  remainingSeconds = section.minutes * 60;
+  const sec = units[currentIndex];
+  if (!sec) return;
+  remainingSeconds = sec.minutes * 60;
   lastTick = Date.now();
-  accumulatedSectionMs = 0;
   lastBeepSecond = -1;
-  isRunning = true;
-  isPaused = false;
-
+  isRunning = true; isPaused = false;
+  if (sec.bpm) setBpm(sec.bpm);
+  resetCycle();
   requestWakeLock();
-
-  updateTimerDisplay();
-  updateTotalTime();
-  renderFields();
-  renderSummary();
-  renderSectionJumper();
-
-  document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('pauseBtn').style.display = '';
-  document.getElementById('stopBtn').style.display = '';
-
+  afterStateChange();
   startTickLoop();
 }
 
 function startTickLoop() {
+  if (timerRafId) cancelAnimationFrame(timerRafId);
   function tick() {
-    if (isPaused) return;
-
+    if (isPaused || !isRunning) return;
     const now = Date.now();
     const elapsedMs = now - lastTick;
     lastTick = now;
-
     remainingSeconds -= elapsedMs / 1000;
     totalPracticeMs += elapsedMs;
-    accumulatedSectionMs += elapsedMs;
 
-    // Countdown beeps at 3, 2, 1
     const secondsLeft = Math.ceil(remainingSeconds);
     if (secondsLeft <= 3 && secondsLeft > 0 && secondsLeft !== lastBeepSecond) {
       lastBeepSecond = secondsLeft;
-      if (secondsLeft === 1) {
-        playFinalBeep();
-      } else {
-        playCountdownBeep();
-      }
+      if (secondsLeft === 1) playFinalBeep(); else playCountdownBeep();
     }
     if (secondsLeft > 3) lastBeepSecond = -1;
 
+    updateCycleByTime();
     updateTimerDisplay();
     updateTotalTime();
 
     if (remainingSeconds <= 0) {
       remainingSeconds = 0;
-      lastBeepSecond = -1;
-      updateTotalTime();
       playSectionCompleteSound();
       currentIndex++;
-
-      if (currentIndex >= practiceSections.length) {
-        isRunning = false;
-        isPaused = false;
-        totalPracticeMs += accumulatedSectionMs;
-        updateTotalTime();
-        triggerCelebration();
-        return;
-      }
-
+      if (currentIndex >= units.length) { finishPractice(); return; }
       startCurrentSection();
       return;
     }
-
     timerRafId = requestAnimationFrame(tick);
   }
-
   timerRafId = requestAnimationFrame(tick);
 }
 
 function pauseTimer() {
   if (isRunning && !isPaused) {
-    isPaused = true;
-    isRunning = false;
-    window._frozenTotalMs = totalPracticeMs;
-    document.getElementById('startBtn').style.display = '';
-    document.getElementById('startBtn').textContent = '\u25b6\ufe0f Continue';
-    document.getElementById('pauseBtn').style.display = 'none';
-    document.getElementById('stopBtn').style.display = 'none';
-    updateTotalTime();
-    renderFields();
-    renderSummary();
-    renderSectionJumper();
+    isPaused = true; isRunning = false;
+    if (timerRafId) cancelAnimationFrame(timerRafId);
+    releaseWakeLock();
+    afterStateChange();
   }
 }
 
-function stopTimer() {
+function resetTimerState() {
   if (timerRafId) cancelAnimationFrame(timerRafId);
   timerRafId = null;
-  isRunning = false;
-  isPaused = false;
-  window._frozenTotalMs = undefined;
+  isRunning = false; isPaused = false;
   currentIndex = 0;
-  totalPracticeMs = 0;
-  accumulatedSectionMs = 0;
   remainingSeconds = 0;
   lastBeepSecond = -1;
+  cyc = null;
   releaseWakeLock();
-  document.getElementById('startBtn').style.display = '';
-  document.getElementById('startBtn').textContent = '\u25b6\ufe0f Start';
-  document.getElementById('pauseBtn').style.display = 'none';
-  document.getElementById('stopBtn').style.display = 'none';
-  document.getElementById('currentLabel').textContent = 'No unit active';
-  document.getElementById('currentPractice').textContent = '-';
-  document.getElementById('countdown').textContent = '00:00';
-  document.getElementById('countdown').className = 'countdown normal';
-  document.getElementById('progressBar').style.width = '100%';
-  updateTotalTime();
-  renderFields();
-  renderSummary();
-  renderSectionJumper();
+}
+function stopTimer() {
+  resetTimerState();
+  totalPracticeMs = 0;
+  afterStateChange();
 }
 
 function skipSection() {
-  if (!isRunning) return;
-  totalPracticeMs += accumulatedSectionMs;
+  if (!isRunning && !isPaused) return;
   currentIndex++;
-  if (currentIndex >= practiceSections.length) {
-    triggerCelebration();
-    return;
-  }
+  if (currentIndex >= units.length) { finishPractice(); return; }
   startCurrentSection();
 }
 
 function jumpToSection(idx) {
-  if (isRunning) {
-    cancelAnimationFrame(timerRafId);
-    timerRafId = null;
-    isRunning = false;
-  }
-  isPaused = false;
-  window._frozenTotalMs = undefined;
-  totalPracticeMs += accumulatedSectionMs;
+  if (!units[idx]) return;
+  ensureAudioCtx();
   currentIndex = idx;
-  remainingSeconds = practiceSections[idx].minutes * 60;
-  accumulatedSectionMs = 0;
-  lastTick = Date.now();
-  lastBeepSecond = -1;
+  if (!isRunning && !isPaused) totalPracticeMs = 0;
+  startCurrentSection();
+}
+
+function finishPractice() {
+  const practiced = totalPracticeMs;
+  resetTimerState();
+  afterStateChange();
+  document.getElementById('celebrationSub').textContent = t('complete') + ' · ' + fmtTime(practiced / 1000);
+  totalPracticeMs = practiced;
+  updateTotalTime();
+  setTimeout(() => { playApplause(); playJubilation(); showCelebration(); startFireworks(); createConfetti(); }, 300);
+}
+
+function afterStateChange() {
+  setControls();
   updateTimerDisplay();
   updateTotalTime();
-  document.getElementById('startBtn').style.display = '';
-  document.getElementById('startBtn').textContent = '\u25b6\ufe0f Start';
-  document.getElementById('pauseBtn').style.display = 'none';
-  document.getElementById('stopBtn').style.display = '';
-  renderFields();
+  renderCycle(false);
+  renderUnits();
   renderSummary();
   renderSectionJumper();
 }
 
 function updateTimerDisplay() {
-  const section = practiceSections[currentIndex];
-  if (!section) return;
+  const label = document.getElementById('currentLabel');
+  const practice = document.getElementById('currentPractice');
+  const tip = document.getElementById('currentTip');
+  const countEl = document.getElementById('countdown');
+  const bar = document.getElementById('progressBar');
 
-  document.getElementById('currentLabel').textContent = `Unit ${currentIndex + 1} of ${practiceSections.length}`;
-  document.getElementById('currentPractice').textContent = section.name;
+  if (!isRunning && !isPaused) {
+    const first = units[0];
+    label.textContent = t('ready');
+    practice.textContent = presetDisplayName() || (first ? displayName(first, 0) : '-');
+    tip.textContent = '';
+    const plannedMin = units.reduce((a, u) => a + (u.minutes || 0), 0);
+    countEl.textContent = fmtTime(plannedMin * 60);
+    countEl.className = 'countdown';
+    bar.style.width = '100%';
+    return;
+  }
+  const sec = units[currentIndex];
+  if (!sec) return;
+  label.textContent = t('unitOf', { n: currentIndex + 1, m: units.length });
+  practice.textContent = displayName(sec, currentIndex);
+  tip.textContent = sec.tip || '';
 
   const displaySec = Math.max(0, Math.ceil(remainingSeconds));
-  const mins = Math.floor(displaySec / 60);
-  const secs = displaySec % 60;
-  const countEl = document.getElementById('countdown');
-
-  // Show motivating emoji in last 3 seconds, animating on each new second
   if (displaySec > 0 && displaySec <= 3) {
     const emoji = displaySec === 3 ? '🙂' : displaySec === 2 ? '😊' : '🎯';
-    countEl.innerHTML = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}<span class="countdown-emoji" key="${displaySec}">${emoji}</span>`;
+    countEl.innerHTML = fmtTime(displaySec) + '<span class="countdown-emoji">' + emoji + '</span>';
   } else {
-    countEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+    countEl.textContent = fmtTime(displaySec);
   }
-
-  if (remainingSeconds <= 10 && remainingSeconds > 0) {
-    countEl.className = 'countdown motivating';
-  } else {
-    countEl.className = 'countdown normal';
-  }
-
-  const totalSecs = section.minutes * 60;
-  const pct = (remainingSeconds / totalSecs) * 100;
-  document.getElementById('progressBar').style.width = Math.max(0, pct) + '%';
+  countEl.className = 'countdown' + (remainingSeconds <= 10 && remainingSeconds > 0 ? ' motivating' : '');
+  bar.style.width = Math.max(0, (remainingSeconds / (sec.minutes * 60)) * 100) + '%';
 }
-
 function updateTotalTime() {
-  const totalSecs = Math.floor(totalPracticeMs / 1000);
-  const mins = Math.floor(totalSecs / 60);
-  const secs = totalSecs % 60;
-  document.getElementById('totalTime').textContent =
-    String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+  document.getElementById('totalTime').textContent = fmtTime(totalPracticeMs / 1000);
 }
 
-// ========= Summary =========
+// =====================================================================
+// Units UI
+// =====================================================================
+function addUnit() {
+  units.push(normalizeUnit({ name: '', minutes: 5 }));
+  openDetails.add(units[units.length - 1].id);
+  renderUnits(); renderSummary(); renderSectionJumper(); updateTimerDisplay();
+  const inputs = document.querySelectorAll('.unit-name');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+function addFromLibrary(libId, btn) {
+  units.push(makeUnitFromLib(libId));
+  renderUnits(); renderSummary(); renderSectionJumper(); updateTimerDisplay();
+  if (btn) { btn.classList.add('added'); btn.textContent = '✓'; setTimeout(() => { btn.classList.remove('added'); btn.textContent = '+'; }, 1200); }
+}
+function removeUnit(id) {
+  const idx = units.findIndex(u => u.id === id);
+  if (idx < 0) return;
+  if ((isRunning || isPaused) && idx === currentIndex) stopTimer();
+  units.splice(idx, 1);
+  if ((isRunning || isPaused) && idx < currentIndex) currentIndex--;
+  renderUnits(); renderSummary(); renderSectionJumper(); updateTimerDisplay();
+}
+function moveUnit(id, dir) {
+  const idx = units.findIndex(u => u.id === id);
+  const j = idx + dir;
+  if (idx < 0 || j < 0 || j >= units.length) return;
+  if (isRunning || isPaused) {
+    if (currentIndex === idx) currentIndex = j; else if (currentIndex === j) currentIndex = idx;
+  }
+  [units[idx], units[j]] = [units[j], units[idx]];
+  renderUnits(); renderSummary(); renderSectionJumper();
+}
+function toggleDetails(id) {
+  if (openDetails.has(id)) openDetails.delete(id); else openDetails.add(id);
+  renderUnits();
+}
+function updateUnit(id, key, value, rerender) {
+  const u = units.find(x => x.id === id);
+  if (!u) return;
+  if (key === 'name') { u.name = value; u.nameEdited = true; }
+  else if (key === 'tip') { u.tip = value; u.tipEdited = true; }
+  else if (key === 'minutes') { u.minutes = clampInt(value, 1, 240); }
+  else if (key === 'bpm') { u.bpm = value === '' ? null : clampInt(value, 20, 300); }
+  else if (key === 'cycleSemi') {
+    if (value === '') u.cycle = null;
+    else u.cycle = Object.assign({ start: 0, mode: 'manual', bars: 4 }, u.cycle || {}, { semi: parseInt(value, 10) });
+  }
+  else if (key === 'cycleStart' && u.cycle) u.cycle.start = parseInt(value, 10);
+  else if (key === 'cycleMode' && u.cycle) u.cycle.mode = value;
+  else if (key === 'cycleBars' && u.cycle) u.cycle.bars = clampInt(value, 1, 64);
+  if (rerender) renderUnits();
+  renderSummary(); renderSectionJumper();
+  if (!isRunning && !isPaused) updateTimerDisplay();
+  if ((isRunning || isPaused) && units[currentIndex] === u && key.startsWith('cycle')) { resetCycle(); }
+}
+
+function cycleTag(c) {
+  return '🔁 ' + t('intervalsShort')[c.semi] + ' · ' + t('from') + ' ' + noteName(c.start || 0);
+}
+function renderUnits() {
+  const list = document.getElementById('unitsList');
+  const active = isRunning || isPaused;
+  let html = '';
+  units.forEach((u, idx) => {
+    const cls = active ? (idx === currentIndex ? ' current' : (idx < currentIndex ? ' completed' : '')) : '';
+    const open = openDetails.has(u.id);
+    const tags = [];
+    if (u.cycle) tags.push('<span class="tag cycle">' + esc(cycleTag(u.cycle)) + '</span>');
+    if (u.bpm) tags.push('<span class="tag bpm">♩ ' + u.bpm + '</span>');
+    if (u.tip && !open) tags.push('<span class="tag" title="' + esc(u.tip) + '">💡 ' + esc(u.tip.length > 48 ? u.tip.slice(0, 46) + '…' : u.tip) + '</span>');
+
+    html += '<div class="unit' + cls + '">' +
+      '<div class="unit-top">' +
+        '<span class="unit-num">' + (idx + 1) + '</span>' +
+        '<input type="text" class="unit-name" value="' + esc(u.name) + '" placeholder="' + esc(t('unitNamePh')) + '" oninput="updateUnit(' + u.id + ',\'name\',this.value)">' +
+        '<input type="number" class="unit-min" min="1" max="240" inputmode="numeric" value="' + u.minutes + '" onchange="updateUnit(' + u.id + ',\'minutes\',this.value,true)" aria-label="' + esc(t('min')) + '">' +
+        '<span class="unit-min-label">' + esc(t('min')) + '</span>' +
+      '</div>' +
+      '<div class="unit-bottom">' +
+        '<div class="unit-tags">' + tags.join('') + '</div>' +
+        '<div class="unit-actions">' +
+          '<button class="icon-btn" onclick="moveUnit(' + u.id + ',-1)" title="' + esc(t('moveUp')) + '" aria-label="' + esc(t('moveUp')) + '">↑</button>' +
+          '<button class="icon-btn" onclick="moveUnit(' + u.id + ',1)" title="' + esc(t('moveDown')) + '" aria-label="' + esc(t('moveDown')) + '">↓</button>' +
+          '<button class="icon-btn' + (open ? ' on' : '') + '" onclick="toggleDetails(' + u.id + ')" title="' + esc(t('details')) + '" aria-label="' + esc(t('details')) + '">⚙</button>' +
+          '<button class="icon-btn danger" onclick="removeUnit(' + u.id + ')" title="' + esc(t('remove')) + '" aria-label="' + esc(t('remove')) + '">✕</button>' +
+        '</div>' +
+      '</div>';
+
+    if (open) {
+      const c = u.cycle;
+      let semiOpts = '<option value="">' + esc(t('cycleNone')) + '</option>';
+      INTERVALS.forEach(s => { semiOpts += '<option value="' + s + '"' + (c && c.semi === s ? ' selected' : '') + '>' + esc(t('intervals')[s]) + '</option>'; });
+      let keyOpts = '';
+      for (let k = 0; k < 12; k++) keyOpts += '<option value="' + k + '"' + (c && (c.start || 0) === k ? ' selected' : '') + '>' + esc(noteName(k)) + '</option>';
+      const modes = [['manual', 'modeManual'], ['time', 'modeTime'], ['bars', 'modeBars']];
+      let modeOpts = '';
+      modes.forEach(([v, k]) => { modeOpts += '<option value="' + v + '"' + (c && c.mode === v ? ' selected' : '') + '>' + esc(t(k)) + '</option>'; });
+
+      html += '<div class="unit-details">' +
+        '<label class="field full"><span>' + esc(t('tip')) + '</span><textarea placeholder="' + esc(t('tipPh')) + '" oninput="updateUnit(' + u.id + ',\'tip\',this.value)">' + esc(u.tip) + '</textarea></label>' +
+        '<label class="field"><span>' + esc(t('unitBpm')) + '</span><input type="number" min="20" max="300" inputmode="numeric" value="' + (u.bpm || '') + '" placeholder="' + esc(t('unitBpmPh')) + '" onchange="updateUnit(' + u.id + ',\'bpm\',this.value,true)"></label>' +
+        '<label class="field"><span>🔁 ' + esc(t('cycle')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleSemi\',this.value,true)">' + semiOpts + '</select></label>';
+      if (c) {
+        html += '<label class="field"><span>' + esc(t('startKey')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleStart\',this.value,true)">' + keyOpts + '</select></label>' +
+          '<label class="field"><span>' + esc(t('cycleMode')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleMode\',this.value,true)">' + modeOpts + '</select></label>';
+        if (c.mode === 'bars') {
+          html += '<label class="field"><span>' + esc(t('barsPerKey')) + '</span><input type="number" min="1" max="64" inputmode="numeric" value="' + (c.bars || 4) + '" onchange="updateUnit(' + u.id + ',\'cycleBars\',this.value,true)"></label>';
+        }
+        const seq = keySequence(c.semi, c.start || 0);
+        html += '<div class="field full"><span>' + seq.seq.map((pc, j) => (j > 0 && seq.groupLen < 12 && j % seq.groupLen === 0 ? ' | ' : (j > 0 ? ' · ' : '')) + esc(noteName(pc))).join('') + '</span></div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  list.innerHTML = html;
+  const planned = units.reduce((a, u) => a + (u.minutes || 0), 0);
+  document.getElementById('unitsHint').textContent = units.length ? ' · ' + planned + ' ' + t('min') : '';
+}
+
 function renderSummary() {
   const list = document.getElementById('summaryList');
-  list.innerHTML = '';
-  practiceSections.forEach((section, idx) => {
-    const li = document.createElement('li');
-    let statusClass = 'status-pending';
-    let statusText = 'Pending';
-
-    if (isRunning || isPaused) {
-      if (idx === currentIndex) {
-        statusClass = 'status-current';
-        statusText = 'Active';
-      } else if (idx < currentIndex) {
-        statusClass = 'status-done';
-        statusText = 'Done';
-      }
-    }
-
-    li.innerHTML = `
-      <span class="section-name">${idx + 1}. ${section.name || '(Unnamed)'}</span>
-      <span class="section-time">${section.minutes} min</span>
-      <span class="section-status ${statusClass}">${statusText}</span>
-    `;
-    list.appendChild(li);
+  const active = isRunning || isPaused;
+  let html = '';
+  units.forEach((u, idx) => {
+    let cls = 'status-pending', txt = t('pending');
+    if (active && idx === currentIndex) { cls = 'status-current'; txt = t('active'); }
+    else if (active && idx < currentIndex) { cls = 'status-done'; txt = t('done'); }
+    html += '<li><span class="s-name">' + (idx + 1) + '. ' + esc(displayName(u, idx)) + '</span><span class="s-time">' + u.minutes + ' ' + esc(t('min')) + '</span><span class="status ' + cls + '">' + esc(txt) + '</span></li>';
   });
+  list.innerHTML = html;
+  const planned = units.reduce((a, u) => a + (u.minutes || 0), 0);
+  document.getElementById('plannedTotal').textContent = planned + ' ' + t('min');
 }
 
 function renderSectionJumper() {
-  const jumper = document.getElementById('sectionJumper');
-  jumper.innerHTML = '';
-  practiceSections.forEach((section, idx) => {
-    const btn = document.createElement('button');
-    btn.className = 'btn';
-    if (idx === currentIndex && (isRunning || isPaused)) btn.classList.add('active-jump');
-    btn.textContent = `${idx + 1}. ${section.name || section.minutes + 'm'}`;
-    btn.onclick = () => jumpToSection(idx);
-    jumper.appendChild(btn);
+  const el = document.getElementById('sectionJumper');
+  const active = isRunning || isPaused;
+  el.innerHTML = '';
+  units.forEach((u, idx) => {
+    const b = document.createElement('button');
+    if (active && idx === currentIndex) b.className = 'active';
+    else if (active && idx < currentIndex) b.className = 'done';
+    b.textContent = (idx + 1) + '. ' + displayName(u, idx);
+    b.title = b.textContent;
+    b.onclick = () => jumpToSection(idx);
+    el.appendChild(b);
   });
 }
 
-// ========= Celebration (applause + fireworks + jubilation) =========
-function triggerCelebration() {
+// =====================================================================
+// Library UI
+// =====================================================================
+function setLibFilter(tag) { libFilter = tag; renderLibrary(); }
+function renderLibrary() {
+  const f = document.getElementById('libFilter');
+  let fh = '<button class="chip-btn' + (libFilter === 'all' ? ' active' : '') + '" onclick="setLibFilter(\'all\')">' + esc(t('all')) + '</button>';
+  TAG_ORDER.forEach(tag => { fh += '<button class="chip-btn' + (libFilter === tag ? ' active' : '') + '" onclick="setLibFilter(\'' + tag + '\')">' + esc(t('tags')[tag]) + '</button>'; });
+  f.innerHTML = fh;
+
+  const list = document.getElementById('libList');
+  let html = '';
+  CAT_ORDER.forEach(cat => {
+    const items = LIB_ORDER.map(id => LIB[id]).filter(it => it.cat === cat && (libFilter === 'all' || it.tags.includes(libFilter) || it.tags.includes('all')));
+    if (!items.length) return;
+    html += '<div class="lib-cat"><h3>' + esc(t('cats')[cat]) + '</h3>';
+    items.forEach(it => {
+      const meta = ['<span class="tag">' + it.minutes + ' ' + esc(t('min')) + '</span>'];
+      if (it.cycle) meta.push('<span class="tag cycle">' + esc(cycleTag(it.cycle)) + '</span>');
+      if (it.bpm) meta.push('<span class="tag bpm">♩ ' + it.bpm + '</span>');
+      html += '<div class="lib-item"><div class="lib-text"><div class="lib-name">' + esc(it.name[lang]) + '</div><div class="lib-tip">' + esc(it.tip[lang]) + '</div><div class="lib-meta">' + meta.join('') + '</div></div>' +
+        '<button class="lib-add" onclick="addFromLibrary(\'' + it.id + '\', this)" aria-label="+">+</button></div>';
+    });
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+// =====================================================================
+// Presets (localStorage keys practicePresets / practiceDefault kept compatible)
+// =====================================================================
+function getUserPresets() { try { return JSON.parse(localStorage.getItem('practicePresets') || '{}'); } catch (e) { return {}; } }
+function presetDisplayName() {
+  if (!currentPresetRef) return document.getElementById('presetName').value.trim();
+  if (currentPresetRef.type === 'builtin') { const p = BUILTIN.find(b => b.id === currentPresetRef.id); return p ? p.name[lang] : ''; }
+  return currentPresetRef.name;
+}
+function loadUnitsFromBuiltin(id) {
+  const p = BUILTIN.find(b => b.id === id) || BUILTIN[0];
+  units = p.units.map(([lib, min]) => makeUnitFromLib(lib, min));
+  currentPresetRef = { type: 'builtin', id: p.id };
+  document.getElementById('presetName').value = p.name[lang];
+}
+function loadUnitsFromData(data) {
+  units = (data.sections || []).map(normalizeUnit);
+  retranslateUnits();
+  currentPresetRef = { type: 'user', name: data.name || '' };
+  document.getElementById('presetName').value = data.name || '';
+}
+function afterPresetLoad() {
+  openDetails.clear();
   stopTimer();
-  // Wait a moment after the last beep, then celebrate
-  setTimeout(() => {
-    playApplause();
-    playJubilation();
-    showCelebration();
-    startFireworks();
-    createConfetti();
-  }, 300);
+  renderPresetSelect();
+}
+function loadSelectedPreset() {
+  const v = document.getElementById('presetSelect').value;
+  if (!v) return;
+  if (v.startsWith('b:')) loadUnitsFromBuiltin(v.slice(2));
+  else {
+    const p = getUserPresets()[v.slice(2)];
+    if (!p) return;
+    loadUnitsFromData(p);
+  }
+  afterPresetLoad();
+}
+function savePreset() {
+  const name = document.getElementById('presetName').value.trim();
+  if (!name) { alert(t('alertName')); return; }
+  const presets = getUserPresets();
+  presets[name] = { name, sections: units.map(unitForStorage) };
+  localStorage.setItem('practicePresets', JSON.stringify(presets));
+  currentPresetRef = { type: 'user', name };
+  renderPresetSelect();
+  alert(t('alertSaved', { n: name }));
+}
+function saveAsDefaultPreset() {
+  const name = document.getElementById('presetName').value.trim() || presetDisplayName() || 'Practice Pal';
+  localStorage.setItem('practiceDefault', JSON.stringify({ name, sections: units.map(unitForStorage) }));
+  alert(t('alertDefault', { n: name }));
+}
+function deletePreset() {
+  const v = document.getElementById('presetSelect').value;
+  if (v.startsWith('b:')) { alert(t('alertBuiltin')); return; }
+  if (!v.startsWith('u:')) { alert(t('alertSelect')); return; }
+  const name = v.slice(2);
+  if (!confirm(t('confirmDelete', { n: name }))) return;
+  const presets = getUserPresets();
+  delete presets[name];
+  localStorage.setItem('practicePresets', JSON.stringify(presets));
+  if (currentPresetRef && currentPresetRef.type === 'user' && currentPresetRef.name === name) currentPresetRef = null;
+  renderPresetSelect();
+}
+function loadDefaultPreset() {
+  const saved = localStorage.getItem('practiceDefault');
+  let data = null;
+  try { data = saved ? JSON.parse(saved) : null; } catch (e) { data = null; }
+  if (data && data.sections && data.sections.length) loadUnitsFromData(data);
+  else loadUnitsFromBuiltin('jazzPiano');
+  afterPresetLoad();
+}
+function renderPresetSelect() {
+  const sel = document.getElementById('presetSelect');
+  sel.innerHTML = '';
+  const ph = document.createElement('option'); ph.value = ''; ph.textContent = t('choosePreset'); sel.appendChild(ph);
+  const g1 = document.createElement('optgroup'); g1.label = t('builtinGroup');
+  BUILTIN.forEach(p => { const o = document.createElement('option'); o.value = 'b:' + p.id; o.textContent = p.name[lang]; g1.appendChild(o); });
+  sel.appendChild(g1);
+  const user = getUserPresets();
+  const names = Object.keys(user);
+  if (names.length) {
+    const g2 = document.createElement('optgroup'); g2.label = t('userGroup');
+    names.forEach(n => { const o = document.createElement('option'); o.value = 'u:' + n; o.textContent = n; g2.appendChild(o); });
+    sel.appendChild(g2);
+  }
+  sel.value = currentPresetRef ? (currentPresetRef.type === 'builtin' ? 'b:' + currentPresetRef.id : 'u:' + currentPresetRef.name) : '';
+  if (sel.selectedIndex < 0) sel.value = '';
 }
 
-function showCelebration() {
-  document.getElementById('celebrationOverlay').classList.add('show');
+// =====================================================================
+// Language & static texts
+// =====================================================================
+function setLang(l) {
+  if (!I18N[l]) return;
+  lang = l;
+  localStorage.setItem('ppLang', l);
+  retranslateUnits();
+  if (currentPresetRef && currentPresetRef.type === 'builtin') {
+    const p = BUILTIN.find(b => b.id === currentPresetRef.id);
+    if (p) document.getElementById('presetName').value = p.name[lang];
+  }
+  renderAll();
+}
+function applyStaticTexts() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('.lang-switch button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.title = 'Practice Pal – ' + t('subtitle');
+
+  const ts = document.getElementById('timeSigSelect');
+  ts.innerHTML = [[1, t('noBar')], [2, '2/4'], [3, '3/4'], [4, '4/4'], [5, '5/4'], [6, '6/8']].map(([v, l]) => '<option value="' + v + '">' + esc(l) + '</option>').join('');
+  ts.value = metro.beats;
+  const ac = document.getElementById('accentSelect');
+  ac.innerHTML = [['one', t('accOne')], ['twofour', t('accTwoFour')], ['none', t('accNone')]].map(([v, l]) => '<option value="' + v + '">' + esc(l) + '</option>').join('');
+  ac.value = metro.accent;
+  document.getElementById('gapPlay').value = metro.playBars;
+  document.getElementById('gapMute').value = metro.muteBars;
+
+  const ns = document.getElementById('notationSelect');
+  ns.innerHTML = '<option value="intl">' + esc(t('notIntl')) + '</option><option value="de">' + esc(t('notDe')) + '</option>';
+  ns.value = settings.notation;
+  const en = document.getElementById('enharmSelect');
+  en.innerHTML = '<option value="0">' + esc(t('flat6')) + '</option><option value="1">' + esc(t('sharp6')) + '</option>';
+  en.value = settings.sharp6 ? '1' : '0';
+  const bs = document.getElementById('beepsSelect');
+  bs.innerHTML = '<option value="1">' + esc(t('on')) + '</option><option value="0">' + esc(t('off')) + '</option>';
+  bs.value = settings.beeps ? '1' : '0';
+}
+function renderAll() {
+  applyStaticTexts();
+  setControls();
+  renderUnits();
+  renderSummary();
+  renderSectionJumper();
+  renderLibrary();
+  renderPresetSelect();
+  updateTimerDisplay();
+  renderCycle(false);
+  renderMetroStatus();
 }
 
+function toggleSection(id) { document.getElementById(id).classList.toggle('collapsed'); }
+
+// =====================================================================
+// Keyboard shortcuts (desktop)
+// =====================================================================
+document.addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.code === 'Space') { e.preventDefault(); if (isRunning && !isPaused) pauseTimer(); else startTimer(); }
+  else if (e.key === 'ArrowRight') { if (cyc) { e.preventDefault(); nextKey(true); } }
+  else if (e.key === 'm' || e.key === 'M') { const cb = document.getElementById('metronomeToggle'); cb.checked = !cb.checked; toggleMetronome(); }
+  else if (e.key === 't' || e.key === 'T') { tapTempo(); }
+});
+
+// =====================================================================
+// Celebration (applause + fireworks + confetti)
+// =====================================================================
+function showCelebration() { document.getElementById('celebrationOverlay').classList.add('show'); }
 function closeCelebration() {
   document.getElementById('celebrationOverlay').classList.remove('show');
   document.getElementById('fireworksCanvas').classList.remove('show');
   stopFireworks();
   document.querySelectorAll('.confetti-piece').forEach(el => el.remove());
+  totalPracticeMs = 0; updateTotalTime();
 }
-
 function createConfetti() {
   const colors = ['#ffd700', '#ff6b6b', '#00d97e', '#4d8bff', '#c084fc', '#fb923c', '#06b6d4'];
   for (let i = 0; i < 100; i++) {
@@ -1604,236 +2037,82 @@ function createConfetti() {
     document.body.appendChild(piece);
   }
 }
-
-// ========= Fireworks =========
-let fireworksCtx = null;
-let fireworksRunning = false;
-let fireworksParticles = [];
-let fireworksRockets = [];
-
+let fireworksCtx = null, fireworksRunning = false, fireworksParticles = [], fireworksRockets = [];
 function startFireworks() {
   const canvas = document.getElementById('fireworksCanvas');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
   canvas.classList.add('show');
   fireworksCtx = canvas.getContext('2d');
-  fireworksRunning = true;
-  fireworksParticles = [];
-  fireworksRockets = [];
-
-  // Launch multiple rockets over time
-  const burstCount = 12;
-  for (let i = 0; i < burstCount; i++) {
-    setTimeout(() => launchRocket(), i * 400 + Math.random() * 200);
-  }
-
+  fireworksRunning = true; fireworksParticles = []; fireworksRockets = [];
+  for (let i = 0; i < 12; i++) setTimeout(() => launchRocket(), i * 400 + Math.random() * 200);
   requestAnimationFrame(fireworksLoop);
 }
-
-function stopFireworks() {
-  fireworksRunning = false;
-  fireworksParticles = [];
-  fireworksRockets = [];
-}
-
+function stopFireworks() { fireworksRunning = false; fireworksParticles = []; fireworksRockets = []; }
 function launchRocket() {
   if (!fireworksRunning) return;
   const canvas = document.getElementById('fireworksCanvas');
-  const startX = Math.random() * canvas.width;
-  const startY = canvas.height;
+  const startX = Math.random() * canvas.width, startY = canvas.height;
   const targetY = canvas.height * (0.15 + Math.random() * 0.4);
-  fireworksRockets.push({
-    x: startX,
-    y: startY,
-    targetY: targetY,
-    vx: (Math.random() - 0.5) * 2,
-    vy: -Math.sqrt(2 * 0.15 * (startY - targetY)) * 0.9,
-    color: `hsl(${Math.random() * 360}, 100%, 60%)`,
-    exploded: false
-  });
+  fireworksRockets.push({ x: startX, y: startY, targetY, vx: (Math.random() - 0.5) * 2, vy: -Math.sqrt(2 * 0.15 * (startY - targetY)) * 0.9, color: 'hsl(' + (Math.random() * 360) + ', 100%, 60%)', exploded: false });
 }
-
 function explodeFirework(x, y, color) {
-  const particleCount = 50 + Math.random() * 30;
-  for (let i = 0; i < particleCount; i++) {
-    const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.2;
-    const speed = 2 + Math.random() * 4;
-    fireworksParticles.push({
-      x: x,
-      y: y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      color: color,
-      life: 1,
-      decay: 0.012 + Math.random() * 0.015,
-      size: 2 + Math.random() * 2
-    });
+  const n = 50 + Math.random() * 30;
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i) / n + Math.random() * 0.2, speed = 2 + Math.random() * 4;
+    fireworksParticles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, color, life: 1, decay: 0.012 + Math.random() * 0.015, size: 2 + Math.random() * 2 });
   }
 }
-
 function fireworksLoop() {
   if (!fireworksRunning) return;
   const canvas = document.getElementById('fireworksCanvas');
   const ctx = fireworksCtx;
   ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Update rockets
   fireworksRockets.forEach(r => {
     if (r.exploded) return;
-    r.x += r.vx;
-    r.y += r.vy;
-    r.vy += 0.05; // gravity
-    ctx.beginPath();
-    ctx.arc(r.x, r.y, 2, 0, Math.PI * 2);
-    ctx.fillStyle = r.color;
-    ctx.fill();
-    // Trail
-    ctx.beginPath();
-    ctx.moveTo(r.x, r.y);
-    ctx.lineTo(r.x - r.vx, r.y - r.vy);
-    ctx.strokeStyle = r.color;
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.6;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    if (r.y <= r.targetY || r.vy >= 0) {
-      r.exploded = true;
-      explodeFirework(r.x, r.y, r.color);
-    }
+    r.x += r.vx; r.y += r.vy; r.vy += 0.05;
+    ctx.beginPath(); ctx.arc(r.x, r.y, 2, 0, Math.PI * 2); ctx.fillStyle = r.color; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - r.vx, r.y - r.vy);
+    ctx.strokeStyle = r.color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6; ctx.stroke(); ctx.globalAlpha = 1;
+    if (r.y <= r.targetY || r.vy >= 0) { r.exploded = true; explodeFirework(r.x, r.y, r.color); }
   });
-  fireworksRockets = fireworksRockets.filter(r => !r.exploded || r.y < canvas.height);
-
-  // Update particles
+  fireworksRockets = fireworksRockets.filter(r => !r.exploded);
   fireworksParticles.forEach(p => {
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.06;
-    p.vx *= 0.99;
-    p.vy *= 0.99;
-    p.life -= p.decay;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fillStyle = p.color;
-    ctx.globalAlpha = Math.max(0, p.life);
-    ctx.fill();
+    p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.vx *= 0.99; p.vy *= 0.99; p.life -= p.decay;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life); ctx.fill();
   });
   ctx.globalAlpha = 1;
   fireworksParticles = fireworksParticles.filter(p => p.life > 0);
-
-  // Launch additional rockets while running
   if (Math.random() < 0.04) launchRocket();
-
   requestAnimationFrame(fireworksLoop);
 }
-
 window.addEventListener('resize', () => {
   const canvas = document.getElementById('fireworksCanvas');
-  if (canvas.classList.contains('show')) {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
+  if (canvas.classList.contains('show')) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 });
 
-// Register service worker for PWA install + better background behavior
+// Service worker (PWA install + better background behaviour)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const swCode = `
-      self.addEventListener('install', e => self.skipWaiting());
-      self.addEventListener('activate', e => self.clients.claim());
-    `;
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    const url = URL.createObjectURL(blob);
+    const swCode = "self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => self.clients.claim());";
+    const url = URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' }));
     navigator.serviceWorker.register(url).catch(() => {});
   });
 }
 
-// ========= Presets =========
-function savePreset() {
-  const name = document.getElementById('presetName').value.trim();
-  if (!name) {
-    alert('Please enter a name for the preset.');
-    return;
-  }
-  const presetData = {
-    name: name,
-    sections: practiceSections.map(s => ({ name: s.name, minutes: s.minutes }))
-  };
-  let presets = JSON.parse(localStorage.getItem('practicePresets') || '{}');
-  presets[name] = presetData;
-  localStorage.setItem('practicePresets', JSON.stringify(presets));
-  loadPresetList();
-}
-
-function saveAsDefaultPreset() {
-  const name = document.getElementById('presetName').value.trim() || "Standard Practice Routine";
-  const presetData = {
-    name: name,
-    sections: practiceSections.map(s => ({ name: s.name, minutes: s.minutes }))
-  };
-  localStorage.setItem('practiceDefault', JSON.stringify(presetData));
-  alert('Default preset saved as "' + name + '"!');
+// =====================================================================
+// Init
+// =====================================================================
+function init() {
+  document.getElementById('bpmValue').textContent = metro.bpm;
+  document.getElementById('bpmSlider').value = metro.bpm;
+  document.getElementById('volumeBar').style.width = (metro.vol * 100) + '%';
+  libFilter = 'jazz';
   loadDefaultPreset();
+  renderAll();
 }
-
-function loadPreset() {
-  const select = document.getElementById('presetSelect');
-  const name = select.value;
-  if (!name) return;
-  const presets = JSON.parse(localStorage.getItem('practicePresets') || '{}');
-  const preset = presets[name];
-  if (!preset) return;
-  document.getElementById('presetName').value = preset.name;
-  practiceSections = preset.sections.map((s, i) => ({ ...s, id: Date.now() + i }));
-  fieldCounter = practiceSections.length;
-  stopTimer();
-  renderFields();
-  renderSummary();
-  renderSectionJumper();
-}
-
-function deletePreset() {
-  const select = document.getElementById('presetSelect');
-  const name = select.value;
-  if (!name) {
-    alert('Please select a preset to delete.');
-    return;
-  }
-  if (!confirm('Delete preset "' + name + '"?')) return;
-  const presets = JSON.parse(localStorage.getItem('practicePresets') || '{}');
-  delete presets[name];
-  localStorage.setItem('practicePresets', JSON.stringify(presets));
-  loadPresetList();
-}
-
-function loadPresetList() {
-  const select = document.getElementById('presetSelect');
-  const presets = JSON.parse(localStorage.getItem('practicePresets') || '{}');
-  select.innerHTML = '<option value="">-- Load Preset --</option>';
-  Object.keys(presets).forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    select.appendChild(opt);
-  });
-}
-
-function loadDefaultPreset() {
-  const savedDefault = localStorage.getItem('practiceDefault');
-  let preset = savedDefault ? JSON.parse(savedDefault) : defaultPreset;
-  practiceSections = preset.sections.map((s, i) => ({ ...s, id: Date.now() + i }));
-  fieldCounter = practiceSections.length;
-  document.getElementById('presetName').value = preset.name;
-  stopTimer();
-  renderFields();
-  renderSummary();
-  renderSectionJumper();
-}
-
-// ========= Start =========
 init();
 </script>
-
 </body>
 </html>
