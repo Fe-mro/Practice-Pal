@@ -318,6 +318,35 @@
 
   footer { max-width: 1200px; margin: 18px auto 0; text-align: center; color: var(--text-dim); font-size: 0.75em; }
 
+  /* ===== Focus rotation ===== */
+  .focusbox { margin: 10px 0 4px; background: rgba(0,217,126,0.08); border: 1px solid rgba(0,217,126,0.35); border-radius: 14px; padding: 12px; cursor: pointer; text-align: left; user-select: none; -webkit-user-select: none; }
+  .fb-head { display: flex; justify-content: space-between; font-size: 0.78em; color: var(--text-dim); gap: 8px; }
+  .fb-area { color: var(--green); font-weight: 800; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+  .fb-q { font-size: 1.15em; font-weight: 700; margin-top: 2px; line-height: 1.3; }
+  .fb-q.pop { animation: key-pop 0.3s ease-out; }
+  .fb-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 99px; margin-top: 10px; overflow: hidden; }
+  .fb-bar div { height: 100%; width: 0; background: var(--green); }
+
+  /* ===== Musician profile (pie) ===== */
+  .prof-sub { font-size: 0.8em; color: var(--text-dim); margin-bottom: 10px; }
+  .prof-step { font-size: 0.78em; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gold); margin: 4px 0 8px; font-weight: 700; }
+  .profile-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .profile-grid > * { min-width: 0; }
+  .pie-wrap svg { width: 100%; max-width: 460px; display: block; margin: 0 auto; overflow: visible; }
+  .pie-hint { text-align: center; font-size: 0.85em; color: var(--gold); margin-top: 6px; min-height: 1.2em; }
+  .snap-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+  .snap-row > select { flex: 1 1 120px; width: auto; min-width: 0; }
+  .cat-row { background: var(--card-2); border: 1px solid var(--card-border); border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
+  .cat-top { display: flex; gap: 8px; align-items: center; }
+  .cat-top input[type=text] { flex: 1; min-width: 0; }
+  .cat-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .cat-score { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .cat-score .bpm-slider { flex: 1; margin: 6px 0; }
+  .cat-score b { min-width: 2.6em; text-align: right; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .cat-ten { font-size: 14px !important; min-height: 36px !important; padding: 6px 10px !important; }
+  .who-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) auto; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .celebration-reflect { margin-top: 14px; color: var(--text-dim); text-align: center; max-width: 440px; animation: fade-in 1s 0.6s both; }
+
   /* ===== Celebration ===== */
   .celebration-overlay { display: none; position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(0,0,0,0.7), rgba(0,0,0,0.95)); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
   .celebration-overlay.show { display: flex; }
@@ -363,6 +392,7 @@
     .col-left { position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; scrollbar-width: thin; }
     .countdown { font-size: 4.8em; }
     .mobile-only { display: none !important; }
+    #catList { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 8px; }
   }
 </style>
 </head>
@@ -399,6 +429,13 @@
         </div>
         <div class="kc-chips" id="kcChips"></div>
         <div class="kc-hint" id="kcHint"></div>
+      </div>
+
+      <div class="focusbox" id="focusBox" style="display:none" onclick="nextFocus()" role="button">
+        <div class="fb-head"><span>&#129517; <span data-i18n="focusTitle"></span></span><span id="fbCount"></span></div>
+        <div class="fb-area" id="fbArea"></div>
+        <div class="fb-q" id="fbQ"></div>
+        <div class="fb-bar"><div id="fbBar"></div></div>
       </div>
 
       <div class="controls" id="controls">
@@ -521,6 +558,42 @@
           <label class="field"><span data-i18n="enharmonic"></span><select id="enharmSelect" onchange="setSetting('sharp6', this.value === '1')"></select></label>
           <label class="field"><span data-i18n="countdownBeeps"></span><select id="beepsSelect" onchange="setSetting('beeps', this.value === '1')"></select></label>
         </div>
+        <label class="field" style="margin-top:14px"><span>&#129517; <span data-i18n="checklistLabel"></span></span><textarea id="checklistText" rows="9" onchange="saveChecklist(this.value)"></textarea></label>
+        <div class="prof-sub" style="margin-top:6px" data-i18n="checklistHelp"></div>
+        <button class="btn btn-ghost btn-small" onclick="resetChecklist()">&#8634; <span data-i18n="checklistReset"></span></button>
+      </div>
+    </section>
+
+    <section class="card collapsed" id="profileSection">
+      <div class="section-header" onclick="toggleSection('profileSection')">
+        <h2>&#127919; <span data-i18n="profile"></span></h2>
+        <span class="toggle-icon">&#9662;</span>
+      </div>
+      <div class="section-body">
+        <div class="prof-sub" data-i18n="profileIntro"></div>
+        <div class="profile-grid">
+          <div class="pie-wrap">
+            <div id="pieChart"></div>
+            <div class="pie-hint" id="pieHint"></div>
+            <div class="snap-row">
+              <button class="btn btn-gold btn-small" onclick="saveSnapshot()">&#128248; <span data-i18n="snapSave"></span></button>
+              <select id="snapSelect" onchange="setCompare(this.value)" aria-label="Compare"></select>
+              <button class="icon-btn danger" onclick="deleteSnapshot()" data-i18n-title="snapDelete">&#10005;</button>
+            </div>
+          </div>
+          <div>
+            <div class="prof-step" data-i18n="stepCats"></div>
+            <div id="catList"></div>
+            <button class="btn btn-ghost btn-small btn-block" onclick="addCat()">&#10133; <span data-i18n="addCat"></span></button>
+            <div class="prof-step" style="margin-top:18px" data-i18n="stepWho"></div>
+            <div class="prof-sub" data-i18n="whoHelp"></div>
+            <div id="whoList"></div>
+            <div class="preset-row">
+              <button class="btn btn-ghost btn-small" onclick="addWho()">&#10133; <span data-i18n="addWho"></span></button>
+              <button class="btn btn-blue btn-small" onclick="whyToCats()">&#8680; <span data-i18n="whyToCats"></span></button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -532,6 +605,7 @@
 <div class="celebration-overlay" id="celebrationOverlay">
   <div class="celebration-text">&#127881; Bravo! &#127881;</div>
   <div class="celebration-sub" id="celebrationSub"></div>
+  <div class="celebration-reflect" id="celebrationReflect"></div>
   <button class="btn btn-gold celebration-close" onclick="closeCelebration()">&#128077; <span data-i18n="close"></span></button>
 </div>
 
@@ -549,7 +623,7 @@ const I18N = {
     nextKeyLabel: 'Nächste',
     start: 'Start', resume: 'Weiter', pause: 'Pause', stop: 'Stop', skip: 'Skip',
     nextKeyBtn: 'Tonart', nextKeyBtnLong: 'Nächste Tonart',
-    shortcuts: '<kbd>Leertaste</kbd> Start/Pause &middot; <kbd>&rarr;</kbd> nächste Tonart &middot; <kbd>M</kbd> Metronom &middot; <kbd>T</kbd> Tap',
+    shortcuts: '<kbd>Leertaste</kbd> Start/Pause &middot; <kbd>&rarr;</kbd> nächste Tonart &middot; <kbd>M</kbd> Metronom &middot; <kbd>T</kbd> Tap &middot; <kbd>F</kbd> nächste Fokus-Frage',
     metronome: 'Metronom',
     timeSig: 'Taktart',
     accent: 'Betonung',
@@ -621,7 +695,37 @@ const I18N = {
     added: 'Hinzugefügt',
     all: 'Alle',
     tags: { jazz: 'Jazz', piano: 'Klavier', classical: 'Klassik', guitar: 'Gitarre', winds: 'Blasinstrumente', strings: 'Streicher', voice: 'Gesang', drums: 'Schlagzeug' },
-    cats: { scales: 'Skalen & Tonleitern', voicings: 'Voicings & Akkorde', vocab: 'Vocabulary & Linien', transcription: 'Transkription', technique: 'Technik', rhythm: 'Rhythmus & Time', ear: 'Gehörbildung', repertoire: 'Repertoire & Stücke' },
+    focusTitle: 'Fokus-Checkliste (antippen = weiter)',
+    focusUnit: 'Fokus-Checkliste',
+    focusEvery: 'alle {s} s',
+    checklistLabel: 'Fokus-Checkliste (für Einheiten mit Fokus-Rotation)',
+    checklistHelp: 'Eine Frage pro Zeile, Format „Bereich: Frage“. Passe die Liste an dich an – ergänze, streiche, mach sie zu deiner.',
+    checklistReset: 'Standard-Checkliste',
+    checklistDefault: 'Körper: Sitze ich aufrecht?\nKörper: Sind die Schultern locker und unten?\nKörper: Hängen die Ellbogen entspannt?\nKörper: Spüre ich unnötige Spannung in Gesicht, Nacken, Armen oder Händen?\nTechnik: Geht es noch entspannter?\nTechnik: Geht es mit weniger Bewegung – Finger statt ganzer Arm?\nKlang: Ist es zu laut?\nKlang: Klingen gleich laute Töne wirklich gleich?\nKlang: Geht es noch gleichmäßiger?\nKlang: Heben sich die Akzente deutlich ab?\nTime: Spüre oder singe ich den Viertelpuls mit?\nTime: Ist die Unterteilung gleichmäßig – fließt es?\nTime: Kann ich einen Halftime-Groove dazu singen?',
+    reflect1: 'Kurz innehalten: Welche 3 Dinge waren heute gut?',
+    reflect2: 'Wofür bist du heute in deiner Musik dankbar?',
+    reflect3: 'Was hat sich heute – auch nur ein kleines bisschen – verbessert? Feiere es!',
+    profile: 'Mein Musiker-Profil',
+    profileIntro: 'Was soll dich als Musiker ausmachen? Trage deine Kategorien ein und gib dir 0–10 Punkte (Mitte = 0, Rand = 10). Überlege bei jeder Kategorie zuerst, wie eine 10 aussehen würde. Speichere deinen Stand, um später deinen eigenen Fortschritt zu vergleichen – nicht den von anderen.',
+    stepCats: 'Kategorien & Punkte',
+    catNamePh: 'Kategorie',
+    tenPh: 'Was wäre eine 10?',
+    addCat: 'Kategorie hinzufügen',
+    stepWho: 'Vorbilder: Wer? Warum?',
+    whoHelp: 'Notiere Musiker, die dich begeistern, und was genau dich an ihnen fasziniert. Die Eigenschaften kannst du als Kategorien übernehmen.',
+    whoPh: 'Wer?',
+    whyPh: 'Warum? (z. B. Time, Klang, Voicings)',
+    addWho: 'Vorbild hinzufügen',
+    whyToCats: 'Eigenschaften als Kategorien übernehmen',
+    snapSave: 'Stand speichern',
+    snapDelete: 'Gespeicherten Stand löschen',
+    snapNone: '— mit gespeichertem Stand vergleichen —',
+    snapSaved: 'Stand vom {d} gespeichert.',
+    weakest: 'Möglicher Schwerpunkt: {c} ({n}/10)',
+    maxCats: 'Maximal 12 Kategorien.',
+    minCats: 'Mindestens 3 Kategorien.',
+    defaultCats: ['Technik', 'Klang', 'Time & Groove', 'Harmonie & Voicings', 'Improvisation & Vocabulary', 'Repertoire', 'Gehör'],
+    cats: { methods: 'Übe-Methoden', latin: 'Latin & Comping-Patterns', mind: 'Wahrnehmung & Achtsamkeit', scales: 'Skalen & Tonleitern', voicings: 'Voicings & Akkorde', vocab: 'Vocabulary & Linien', transcription: 'Transkription', technique: 'Technik', rhythm: 'Rhythmus & Time', ear: 'Gehörbildung', repertoire: 'Repertoire & Stücke' },
     intervals: { 1: 'kleine Sekunde (chromatisch)', 2: 'große Sekunde (Ganztöne)', 3: 'kleine Terz', 4: 'große Terz', 5: 'Quarte (Quartenzirkel)', 6: 'Tritonus', 7: 'Quinte (Quintenzirkel)', 8: 'kleine Sexte', 9: 'große Sexte' },
     intervalsShort: { 1: 'kl. Sekunde', 2: 'gr. Sekunde', 3: 'kl. Terz', 4: 'gr. Terz', 5: 'Quarte', 6: 'Tritonus', 7: 'Quinte', 8: 'kl. Sexte', 9: 'gr. Sexte' },
     from: 'ab'
@@ -635,7 +739,7 @@ const I18N = {
     nextKeyLabel: 'Next',
     start: 'Start', resume: 'Resume', pause: 'Pause', stop: 'Stop', skip: 'Skip',
     nextKeyBtn: 'Key', nextKeyBtnLong: 'Next key',
-    shortcuts: '<kbd>Space</kbd> start/pause &middot; <kbd>&rarr;</kbd> next key &middot; <kbd>M</kbd> metronome &middot; <kbd>T</kbd> tap',
+    shortcuts: '<kbd>Space</kbd> start/pause &middot; <kbd>&rarr;</kbd> next key &middot; <kbd>M</kbd> metronome &middot; <kbd>T</kbd> tap &middot; <kbd>F</kbd> next focus question',
     metronome: 'Metronome',
     timeSig: 'Time signature',
     accent: 'Accent',
@@ -707,7 +811,37 @@ const I18N = {
     added: 'Added',
     all: 'All',
     tags: { jazz: 'Jazz', piano: 'Piano', classical: 'Classical', guitar: 'Guitar', winds: 'Winds & brass', strings: 'Strings', voice: 'Voice', drums: 'Drums' },
-    cats: { scales: 'Scales', voicings: 'Voicings & chords', vocab: 'Vocabulary & lines', transcription: 'Transcription', technique: 'Technique', rhythm: 'Rhythm & time', ear: 'Ear training', repertoire: 'Repertoire & pieces' },
+    focusTitle: 'Focus checklist (tap = next)',
+    focusUnit: 'Focus checklist',
+    focusEvery: 'every {s} s',
+    checklistLabel: 'Focus checklist (for units with focus rotation)',
+    checklistHelp: 'One question per line, format “Area: question”. Adapt it to yourself – add, remove, make it yours.',
+    checklistReset: 'Default checklist',
+    checklistDefault: 'Body: Am I sitting upright?\nBody: Are my shoulders relaxed and down?\nBody: Are my elbows hanging loosely?\nBody: Any unnecessary tension in face, neck, arms or hands?\nTechnique: Can this be even more relaxed?\nTechnique: Can I use less motion – fingers instead of the whole arm?\nSound: Is it too loud?\nSound: Do notes meant to be equal really sound equal?\nSound: Can it be more even?\nSound: Do the accents stand out clearly?\nTime: Can I feel or sing the quarter-note pulse?\nTime: Is the subdivision even – does it flow?\nTime: Can I sing a half-time groove over it?',
+    reflect1: 'Take a moment: what were 3 good things today?',
+    reflect2: 'What are you grateful for in your music today?',
+    reflect3: 'What improved today – even just a tiny bit? Celebrate it!',
+    profile: 'My musician profile',
+    profileIntro: 'What should define you as a musician? Enter your categories and rate yourself 0–10 (center = 0, edge = 10). For each category, first imagine what a 10 would look like. Save your status to compare your own progress later – not someone else’s.',
+    stepCats: 'Categories & points',
+    catNamePh: 'Category',
+    tenPh: 'What would a 10 be?',
+    addCat: 'Add category',
+    stepWho: 'Role models: who? why?',
+    whoHelp: 'Write down musicians who inspire you and what exactly fascinates you about them. You can turn those qualities into categories.',
+    whoPh: 'Who?',
+    whyPh: 'Why? (e.g. time, sound, voicings)',
+    addWho: 'Add role model',
+    whyToCats: 'Use qualities as categories',
+    snapSave: 'Save status',
+    snapDelete: 'Delete saved status',
+    snapNone: '— compare with a saved status —',
+    snapSaved: 'Status of {d} saved.',
+    weakest: 'Possible focus: {c} ({n}/10)',
+    maxCats: 'Maximum 12 categories.',
+    minCats: 'At least 3 categories.',
+    defaultCats: ['Technique', 'Sound', 'Time & groove', 'Harmony & voicings', 'Improvisation & vocabulary', 'Repertoire', 'Ear'],
+    cats: { methods: 'Practice methods', latin: 'Latin & comping patterns', mind: 'Awareness & mindfulness', scales: 'Scales', voicings: 'Voicings & chords', vocab: 'Vocabulary & lines', transcription: 'Transcription', technique: 'Technique', rhythm: 'Rhythm & time', ear: 'Ear training', repertoire: 'Repertoire & pieces' },
     intervals: { 1: 'minor second (chromatic)', 2: 'major second (whole steps)', 3: 'minor third', 4: 'major third', 5: 'fourth (circle of fourths)', 6: 'tritone', 7: 'fifth (circle of fifths)', 8: 'minor sixth', 9: 'major sixth' },
     intervalsShort: { 1: 'min 2nd', 2: 'maj 2nd', 3: 'min 3rd', 4: 'maj 3rd', 5: '4th', 6: 'tritone', 7: '5th', 8: 'min 6th', 9: 'maj 6th' },
     from: 'from'
@@ -1065,7 +1199,159 @@ L('re-voice', 'repertoire', ['voice'], 20,
   ['Song in Abschnitten: Text, Melodie, Atemstellen festlegen; dann mit Begleitung.',
    'Work on a song in sections: lyrics, melody, breathing spots; then with accompaniment.']);
 
-const CAT_ORDER = ['scales', 'voicings', 'vocab', 'transcription', 'technique', 'rhythm', 'ear', 'repertoire'];
+// ---- Practice methods (principles of effective practicing, in our own words)
+L('me-salami', 'methods', ['all'], 15,
+  ['Salami-Methode', 'Salami slice method'],
+  ['Die schwierige Phrase als Loop im Kopf festlegen, Metronom in einem Tempo, das noch Sinn ergibt. Zuerst NUR den ersten Ton spielen – genau im Timing, mit gutem Klang –, bis die 1 wiederkommt. Dann den nächsten Ton innerlich singen und dazunehmen. Scheibe für Scheibe.',
+   'Set the difficult phrase as a loop in your head, metronome at a tempo that still makes sense. Play ONLY the first note – exactly in time, with good sound – until beat 1 comes around again. Then sing the next note inside and add it. Slice by slice.']);
+L('me-space', 'methods', ['all'], 10,
+  ['Platz schaffen (Pause im Loop)', 'Create space (rest in the loop)'],
+  ['Wird die Phrase länger, schrumpft die Erholungszeit vor dem nächsten Durchgang. Einen Pausentakt oder ein paar Viertel Pause in den Loop einbauen: Zeit zum Entspannen, Atmen, Neu-Fokussieren – und es wird leichter.',
+   'As the phrase grows, the recovery time before the loop restarts shrinks. Add a bar of rest or a few quarter notes of rest to the loop: time to relax, breathe and refocus – and it gets easier.']);
+L('me-sandwich', 'methods', ['all'], 10,
+  ['Sandwich-Methode (Schichten)', 'Sandwich method (layers)'],
+  ['Die Phrase waagerecht in Schichten teilen: nur die linke Hand, nur die rechte Hand, nur eine Stimme bzw. ein Körperteil. Jede Schicht für sich, bis sie bequem sitzt – erst dann zusammensetzen. Ideal für Ostinati und Koordination.',
+   'Slice the phrase horizontally into layers: left hand only, right hand only, one voice or limb at a time. Work on each layer until it feels comfortable – only then put them together. Ideal for ostinatos and coordination.']);
+L('me-checklist', 'methods', ['all'], 15,
+  ['Checklisten-Runde (Fokus-Rotation)', 'Checklist round (focus rotation)'],
+  ['Beim Spielen reihum kurz prüfen: Körper, Technik, Klang, Time – dann wieder von vorn. Kleine Korrekturen am Ganzen, wie ein Bildhauer. Die Fokus-Box im Timer zeigt automatisch die nächste Frage.',
+   'While playing, briefly check in turn: body, technique, sound, time – then start again from the top. Small corrections to the whole, like a sculptor. The focus box in the timer shows the next question automatically.'],
+  { focus: 30 });
+L('me-record', 'methods', ['all'], 3,
+  ['Aufnahme vorher / nachher', 'Record before / after'],
+  ['Am Anfang und am Ende der Session dieselbe Stelle aufnehmen und vergleichen. Miss deinen eigenen Fortschritt – nicht den von anderen.',
+   'Record the same passage at the start and at the end of the session and compare. Measure your own progress – not anyone else’s.']);
+L('me-goodfirst', 'methods', ['all'], 7,
+  ['Erst das Gute, dann verbessern', 'Good things first, then improve'],
+  ['Beim Anhören der Aufnahme zuerst 3 Dinge notieren, die dir gefallen („Wenn mir 3 Dinge gefallen müssten – welche?“). Erst dann 3 Dinge, die du verbessern möchtest – positiv formuliert. Sei so freundlich zu dir wie zu einem guten Freund.',
+   'When listening to your recording, first write down 3 things you like (“If I had to like 3 things, what would they be?”). Only then 3 things you want to improve – phrased positively. Be as kind to yourself as to a good friend.']);
+L('me-mantra', 'methods', ['all'], 5,
+  ['Gelassen bleiben: „Interessant!“', 'Stay calm: “Interesting!”'],
+  ['Achte auf dein Selbstgespräch. Kommt Frust oder Ungeduld, laut „Interessant!“ sagen, durchatmen, lächeln – dann „Entspannen, neu fokussieren“ und weiter.',
+   'Notice your self-talk. When frustration or impatience comes up, say “Interesting!” out loud, breathe, smile – then “relax, refocus” and carry on.']);
+L('me-definegood', 'methods', ['all'], 3,
+  ['Ziel festlegen: Was ist „gut“?', 'Set the goal: what is “good”?'],
+  ['Vor dem Üben klar definieren, woran du erkennst, dass es gut ist (Tempo, Klang, fehlerfrei x-mal). So verschiebt sich das Ziel nicht ständig.',
+   'Before practicing, define clearly how you will know it is good (tempo, sound, x times without mistakes). That way the goal doesn’t keep moving.']);
+L('me-playvspractice', 'methods', ['all'], 10,
+  ['Üben und Spielen trennen', 'Separate practicing from playing'],
+  ['Bewusst entscheiden: Übe ich gerade (stoppen, korrigieren, wiederholen) oder spiele ich (durchspielen, genießen)? Beides hat seinen Platz – nur nicht gleichzeitig.',
+   'Decide consciously: am I practicing (stop, correct, repeat) or playing (play through, enjoy)? Both have their place – just not at the same time.']);
+L('me-mental', 'methods', ['all'], 5,
+  ['Mentales Üben', 'Mental practice'],
+  ['Ohne Instrument: Stück im Kopf hören, Bewegungen vorstellen, Melodie singen, Akkorde benennen. Geht auch unterwegs.',
+   'Without the instrument: hear the piece in your head, imagine the movements, sing the melody, name the chords. Works on the go, too.']);
+L('me-journal', 'methods', ['all'], 3,
+  ['Rückblick & Übe-Tagebuch', 'Review & practice journal'],
+  ['Zu Beginn die Notizen der letzten Session lesen – das spart Aufwärmzeit. Am Ende kurz notieren: Wo stehe ich, was ist der nächste Schritt?',
+   'At the start, read the notes from your last session – it saves warm-up time. At the end, briefly note: where am I, what is the next step?']);
+L('me-revisit', 'methods', ['all'], 10,
+  ['Altes wieder aufgreifen', 'Revisit old material'],
+  ['Eine liegengebliebene Übung oder ein altes Stück wieder hervorholen – oft geht es jetzt leichter, und es zeigt, wie weit du gekommen bist.',
+   'Bring back an exercise or piece you dropped – it often feels easier now and shows how far you have come.']);
+
+// ---- Latin & comping patterns
+L('la-clave', 'latin', ['jazz', 'piano', 'drums', 'guitar'], 5,
+  ['Clave 3:2 und 2:3', 'Clave 3:2 and 2:3'],
+  ['Son- und Rumba-Clave klatschen oder mit dem Fuß, dazu zählen bzw. darüber spielen. Beide Richtungen üben und mitten im Stück zwischen 3:2 und 2:3 umschalten.',
+   'Clap son and rumba clave or play it with your foot, count along or play on top. Practice both directions and switch between 3:2 and 2:3 in the middle of a tune.'],
+  { bpm: 90 });
+L('la-montuno', 'latin', ['jazz', 'piano'], 10,
+  ['Montuno / Guajeo', 'Montuno / guajeo'],
+  ['Ein Montuno über I–IV–V oder ii–V: erst beide Hände parallel in Oktaven, dann im Terz- und im Sextabstand. Auf die Clave ausrichten, durch alle Tonarten.',
+   'A montuno over I–IV–V or ii–V: first both hands in parallel octaves, then a third apart and a sixth apart. Align it with the clave, through all keys.'],
+  { cy: [5, 'manual'], bpm: 100 });
+L('la-tumbao', 'latin', ['jazz', 'piano'], 10,
+  ['Tumbao (Bass) + Montuno', 'Tumbao (bass) + montuno'],
+  ['Links die Tumbao-Bassfigur mit vorgezogenem Bass (auf 2+ und 4), rechts das Montuno. Nach der Sandwich-Methode erst getrennt, dann zusammen.',
+   'Left hand the tumbao bass figure with the anticipated bass (on 2+ and 4), right hand the montuno. Sandwich method: separately first, then together.'],
+  { bpm: 90 });
+L('la-partido', 'latin', ['jazz', 'piano', 'guitar', 'drums'], 8,
+  ['Partido Alto (Samba)', 'Partido alto (samba)'],
+  ['Das typische Partido-Alto-Muster erst klatschen und zählen, dann als Comping auf Akkorden (z. B. ii–V–I) – locker, mit Samba-Feel.',
+   'Clap and count the typical partido alto pattern first, then use it as comping on chords (e.g. ii–V–I) – relaxed, with samba feel.']);
+L('la-bossa', 'latin', ['jazz', 'piano', 'guitar'], 8,
+  ['Bossa-Nova-Comping', 'Bossa nova comping'],
+  ['Bass bzw. Daumen auf 1 und 3 (punktiert), Akkorde im Bossa-Clave-Muster darüber. Leise, gleichmäßig, mit gerader Achtel.',
+   'Bass or thumb on 1 and 3 (dotted), chords on top in the bossa clave pattern. Quiet, even, with straight eighths.']);
+L('la-baiao', 'latin', ['jazz', 'piano', 'guitar'], 6,
+  ['Baião', 'Baião'],
+  ['Brasilianischer Groove: Bass auf 1, 2+ und 3 (punktiert), Akkorde kurz darüber. Erst nur Bass, dann mit Comping.',
+   'Brazilian groove: bass on 1, 2+ and 3 (dotted), short chords on top. Bass alone first, then with comping.']);
+L('la-chacha', 'latin', ['jazz', 'piano', 'drums'], 6,
+  ['Cha-Cha-Chá & Mambo', 'Cha-cha-chá & mambo'],
+  ['Typische Glocken- und Klavierfiguren beider Stile spielen und den Tempo- und Energie-Unterschied spüren: Cha-Cha-Chá gemütlich, Mambo treibend.',
+   'Play the typical bell and piano figures of both styles and feel the difference in tempo and energy: cha-cha-chá laid back, mambo driving.']);
+L('la-songo', 'latin', ['jazz', 'piano', 'drums'], 6,
+  ['Songo', 'Songo'],
+  ['Moderner kubanischer Groove: Bass und Akkorde greifen ineinander, viele Synkopen. Langsam beginnen, Clave immer mitdenken.',
+   'Modern Cuban groove: bass and chords interlock, lots of syncopation. Start slowly, always keep the clave in mind.']);
+L('la-bembe', 'latin', ['jazz', 'drums', 'piano'], 6,
+  ['Afro-kubanisches 6/8 (Bembé)', 'Afro-Cuban 6/8 (bembé)'],
+  ['Metronom auf 6/8 stellen, das Glockenmuster klatschen und dazu den 4er-Puls (punktierte Viertel) mit dem Fuß spüren. Dann Comping oder Melodie darüber.',
+   'Set the metronome to 6/8, clap the bell pattern and feel the 4-pulse (dotted quarters) with your foot. Then comping or melody on top.']);
+L('la-cascara', 'latin', ['jazz', 'drums', 'piano'], 6,
+  ['Cáscara & Bolero', 'Cáscara & bolero'],
+  ['Das Cáscara-Muster als Comping-Rhythmus nutzen; zum Kontrast einen langsamen Bolero mit gesanglicher Melodie spielen.',
+   'Use the cáscara pattern as a comping rhythm; for contrast play a slow bolero with a singing melody.']);
+
+// ---- Rhythm (additional)
+L('rh-offbeat', 'rhythm', ['all', 'jazz'], 6,
+  ['Nur Off-Beats spielen (Test)', 'Off-beats only (test)'],
+  ['Skala, Voicing oder Melodie nur auf den „und“-Zählzeiten spielen, Metronom auf den Schlägen. Hältst du die Off-Beats stabil, ohne auf den Schlag zu rutschen?',
+   'Play a scale, voicing or melody only on the “ands”, metronome on the beats. Can you keep the off-beats steady without sliding onto the beat?'],
+  { bpm: 80 });
+L('rh-callresp', 'rhythm', ['all', 'jazz'], 10,
+  ['Call & Response', 'Call & response'],
+  ['2 Takte Frage, 2 Takte Antwort – die Antwort greift Rhythmus oder Motiv der Frage auf. Tipp: im Metronom 2 Takte hörbar / 2 stumm.',
+   '2 bars question, 2 bars answer – the answer picks up the rhythm or motif of the question. Tip: metronome 2 bars audible / 2 silent.']);
+L('rh-quint', 'rhythm', ['all'], 6,
+  ['Quintolen', 'Quintuplets'],
+  ['5 Töne gleichmäßig auf einen Schlag verteilen (zählen „1-2-3-4-5“), erst auf einem Ton, dann auf Skalen und Arpeggien. Langsam starten.',
+   'Spread 5 notes evenly over one beat (count “1-2-3-4-5”), first on one note, then on scales and arpeggios. Start slowly.'],
+  { bpm: 60 });
+L('rh-poly32', 'rhythm', ['all', 'piano', 'drums'], 7,
+  ['Polyrhythmus 3:2 und 2:3', 'Polyrhythm 3:2 and 2:3'],
+  ['Eine Hand spielt 3, die andere 2 im selben Zeitraum – dann die Hände tauschen. Erst auf dem Tisch klopfen, gemeinsamen Schlag laut zählen, dann am Instrument.',
+   'One hand plays 3, the other 2 in the same span – then swap hands. Tap it on a table first, count the shared beat out loud, then on the instrument.'],
+  { bpm: 60 });
+L('rh-poly34', 'rhythm', ['all', 'piano', 'drums'], 7,
+  ['Polyrhythmus 3:4 und 4:3', 'Polyrhythm 3:4 and 4:3'],
+  ['Eine Hand 3, die andere 4 – dann Hände wechseln. Hilfreich: das gemeinsame Raster aus 12 Unterteilungen langsam mitzählen.',
+   'One hand 3, the other 4 – then swap hands. Helpful: slowly count the shared grid of 12 subdivisions.'],
+  { bpm: 50 });
+
+// ---- Awareness & mindfulness
+L('mi-eyes', 'mind', ['all'], 10,
+  ['Improvisieren mit geschlossenen Augen', 'Improvise with your eyes closed'],
+  ['Augen zu und nur hören: Wie klingt der Raum, der Ton, die Pause? Spiele, was du hörst – nicht, was du siehst.',
+   'Eyes closed, just listen: how does the room, the note, the silence sound? Play what you hear – not what you see.']);
+L('mi-feel', 'mind', ['all'], 10,
+  ['Improvisieren nur über das Fühlen', 'Improvise by feel only'],
+  ['Die Aufmerksamkeit ganz auf die Berührung: Tasten bzw. Saiten, Gewicht, Druck, Loslassen. Wie fühlt sich ein schöner Ton an?',
+   'Put all your attention on touch: keys or strings, weight, pressure, release. What does a beautiful note feel like?']);
+L('mi-meditate', 'mind', ['all'], 5,
+  ['Meditations-Fokus-Session', 'Meditative focus session'],
+  ['2–3 Minuten den Atem beobachten, Körper von Kopf bis Fuß durchgehen, dann sehr langsam und bewusst spielen. Schweifen die Gedanken ab, freundlich zurückkehren.',
+   'Observe your breath for 2–3 minutes, scan your body from head to toe, then play very slowly and consciously. When your mind wanders, kindly come back.'],
+  { bpm: 50 });
+L('mi-gratitude', 'mind', ['all'], 2,
+  ['Dankbarkeit', 'Gratitude'],
+  ['3 Dinge nennen, für die du in deiner Musik dankbar bist – dein Instrument, ein Lehrer, ein gelungener Moment, die Zeit zum Üben.',
+   'Name 3 things you are grateful for in your music – your instrument, a teacher, a moment that worked, the time to practice.']);
+
+// ---- Ear training with solfège
+L('ea-solfege-int', 'ear', ['all', 'voice', 'jazz'], 8,
+  ['Intervalle mit Solfège singen (Do Re Mi)', 'Sing intervals with solfège (do re mi)'],
+  ['Do Re Mi Fa Sol La Ti Do auf- und abwärts singen (relatives Do = Grundton). Dann Sprünge: Do–Mi, Do–Sol, Do–La, Do–Ti, Do–Do und zurück. Am Instrument kontrollieren.',
+   'Sing do re mi fa sol la ti do up and down (movable do = tonic). Then leaps: do–mi, do–sol, do–la, do–ti, do–do and back. Check on your instrument.'],
+  { cy: [5, 'manual'] });
+L('ea-solfege-mel', 'ear', ['all', 'voice', 'jazz'], 8,
+  ['Melodien & Jazz-Themen mit Solfège singen', 'Sing melodies & jazz themes in solfège'],
+  ['Ein Thema in Solfège-Silben singen, chromatische Töne mit Di, Ri, Fi, Si, Li bzw. Ra, Me, Le, Te. Danach auf dem Instrument spielen.',
+   'Sing a theme in solfège syllables, chromatic notes with di, ri, fi, si, li or ra, me, le, te. Then play it on your instrument.']);
+
+const CAT_ORDER = ['methods', 'scales', 'voicings', 'vocab', 'transcription', 'technique', 'rhythm', 'latin', 'ear', 'mind', 'repertoire'];
 const TAG_ORDER = ['jazz', 'piano', 'classical', 'guitar', 'winds', 'strings', 'voice', 'drums'];
 
 // ---- Built-in presets: [libraryId, minutes]
@@ -1074,6 +1360,12 @@ const BUILTIN = [
     units: [['te-piano-warm', 5], ['sc-jazz-mix', 10], ['vo-rootless', 15], ['vb-lick12', 10], ['tr-full', 15], ['re-standard', 15]] },
   { id: 'jazzPianoBH', name: { de: 'Jazz-Klavier: Barry Harris', en: 'Jazz piano: Barry Harris' },
     units: [['te-piano-warm', 5], ['sc-bh-major', 8], ['sc-bh-dom', 8], ['sc-bh-minor', 6], ['vo-bh-6dim', 12], ['vb-enclosure', 8], ['re-standard', 15]] },
+  { id: 'effective', name: { de: 'Effektiv üben (Methoden)', en: 'Effective practicing (methods)' },
+    units: [['me-definegood', 3], ['me-record', 3], ['me-salami', 15], ['me-sandwich', 10], ['me-checklist', 15], ['me-goodfirst', 7]] },
+  { id: 'latinPiano', name: { de: 'Latin-Jazz-Klavier', en: 'Latin jazz piano' },
+    units: [['la-clave', 5], ['la-montuno', 10], ['la-tumbao', 10], ['la-partido', 8], ['la-bossa', 8], ['rh-poly32', 7], ['rh-callresp', 10]] },
+  { id: 'mindful', name: { de: 'Achtsam üben', en: 'Mindful practice' },
+    units: [['mi-meditate', 5], ['mi-gratitude', 2], ['mi-eyes', 10], ['mi-feel', 10], ['ea-solfege-int', 8], ['me-goodfirst', 3]] },
   { id: 'jazzAll', name: { de: 'Jazz (alle Instrumente)', en: 'Jazz (all instruments)' },
     units: [['te-longtones', 5], ['sc-arp', 10], ['vb-guide', 10], ['vb-lick12', 10], ['tr-full', 15], ['re-improv', 15]] },
   { id: 'classicPiano', name: { de: 'Klassik-Klavier', en: 'Classical piano' },
@@ -1127,7 +1419,8 @@ function makeUnitFromLib(libId, minutes) {
     tip: it.tip[lang],
     minutes: minutes || it.minutes,
     bpm: it.bpm || null,
-    cycle: it.cycle ? Object.assign({}, it.cycle) : null
+    cycle: it.cycle ? Object.assign({}, it.cycle) : null,
+    focus: it.focus || null
   };
 }
 function normalizeUnit(s) {
@@ -1139,6 +1432,7 @@ function normalizeUnit(s) {
     minutes: Math.max(1, parseInt(s.minutes, 10) || 1),
     bpm: s.bpm ? clampInt(s.bpm, 20, 300) : null,
     cycle: s.cycle ? Object.assign({ semi: 5, start: 0, mode: 'manual', bars: 4 }, s.cycle) : null,
+    focus: s.focus ? clampInt(s.focus, 10, 300) : null,
     nameEdited: !!s.nameEdited,
     tipEdited: !!s.tipEdited
   };
@@ -1148,6 +1442,7 @@ function unitForStorage(u) {
   if (u.tip) o.tip = u.tip;
   if (u.bpm) o.bpm = u.bpm;
   if (u.cycle) o.cycle = u.cycle;
+  if (u.focus) o.focus = u.focus;
   if (u.lib) { o.lib = u.lib; if (u.nameEdited) o.nameEdited = true; if (u.tipEdited) o.tipEdited = true; }
   return o;
 }
@@ -1497,6 +1792,63 @@ function updateCycleHint() {
 }
 
 // =====================================================================
+// Focus rotation (checklist questions that change every N seconds)
+// =====================================================================
+let foc = null; // {items, idx, manual}
+function getChecklistText() {
+  const s = localStorage.getItem('ppChecklist');
+  return s !== null ? s : t('checklistDefault');
+}
+function parseChecklist() {
+  return getChecklistText().split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const i = l.indexOf(':');
+    return (i > 0 && i < 30) ? { area: l.slice(0, i).trim(), q: l.slice(i + 1).trim() } : { area: '', q: l };
+  });
+}
+function saveChecklist(v) {
+  if (v.trim() === t('checklistDefault').trim()) localStorage.removeItem('ppChecklist');
+  else localStorage.setItem('ppChecklist', v);
+  if (foc) { foc.items = parseChecklist(); renderFocus(false); }
+}
+function resetChecklist() {
+  localStorage.removeItem('ppChecklist');
+  document.getElementById('checklistText').value = t('checklistDefault');
+  if (foc) { foc.items = parseChecklist(); renderFocus(false); }
+}
+function resetFocus() {
+  const sec = units[currentIndex];
+  foc = (sec && sec.focus) ? { items: parseChecklist(), idx: 0, manual: 0 } : null;
+  if (foc && !foc.items.length) foc = null;
+  renderFocus(false);
+}
+function nextFocus() {
+  if (!foc) return;
+  foc.idx++; foc.manual++;
+  renderFocus(true);
+}
+function updateFocusByTime() {
+  const sec = units[currentIndex];
+  if (!foc || !sec || !sec.focus) return;
+  const elapsed = sec.minutes * 60 - remainingSeconds;
+  const target = Math.floor(elapsed / sec.focus) + foc.manual;
+  if (target > foc.idx) { foc.idx = target; playBeep(660, 0.12, 0.12); renderFocus(true); }
+  document.getElementById('fbBar').style.width = Math.min(100, ((elapsed % sec.focus) / sec.focus) * 100) + '%';
+}
+function renderFocus(pop) {
+  const box = document.getElementById('focusBox');
+  const active = foc && (isRunning || isPaused);
+  box.style.display = active ? '' : 'none';
+  if (!active) return;
+  const n = foc.items.length;
+  const it = foc.items[foc.idx % n];
+  document.getElementById('fbArea').textContent = it.area;
+  const q = document.getElementById('fbQ');
+  q.textContent = it.q;
+  if (pop) { q.classList.remove('pop'); void q.offsetWidth; q.classList.add('pop'); }
+  document.getElementById('fbCount').textContent = ((foc.idx % n) + 1) + '/' + n;
+}
+
+// =====================================================================
 // Timer
 // =====================================================================
 function setControls() {
@@ -1537,6 +1889,7 @@ function startCurrentSection() {
   isRunning = true; isPaused = false;
   if (sec.bpm) setBpm(sec.bpm);
   resetCycle();
+  resetFocus();
   requestWakeLock();
   afterStateChange();
   startTickLoop();
@@ -1560,6 +1913,7 @@ function startTickLoop() {
     if (secondsLeft > 3) lastBeepSecond = -1;
 
     updateCycleByTime();
+    updateFocusByTime();
     updateTimerDisplay();
     updateTotalTime();
 
@@ -1593,6 +1947,7 @@ function resetTimerState() {
   remainingSeconds = 0;
   lastBeepSecond = -1;
   cyc = null;
+  foc = null;
   releaseWakeLock();
 }
 function stopTimer() {
@@ -1621,6 +1976,7 @@ function finishPractice() {
   resetTimerState();
   afterStateChange();
   document.getElementById('celebrationSub').textContent = t('complete') + ' · ' + fmtTime(practiced / 1000);
+  document.getElementById('celebrationReflect').textContent = t(['reflect1', 'reflect2', 'reflect3'][Math.floor(Math.random() * 3)]);
   totalPracticeMs = practiced;
   updateTotalTime();
   setTimeout(() => { playApplause(); playJubilation(); showCelebration(); startFireworks(); createConfetti(); }, 300);
@@ -1631,6 +1987,7 @@ function afterStateChange() {
   updateTimerDisplay();
   updateTotalTime();
   renderCycle(false);
+  renderFocus(false);
   renderUnits();
   renderSummary();
   renderSectionJumper();
@@ -1722,6 +2079,7 @@ function updateUnit(id, key, value, rerender) {
     if (value === '') u.cycle = null;
     else u.cycle = Object.assign({ start: 0, mode: 'manual', bars: 4 }, u.cycle || {}, { semi: parseInt(value, 10) });
   }
+  else if (key === 'focus') { u.focus = value === '' ? null : clampInt(value, 10, 300); }
   else if (key === 'cycleStart' && u.cycle) u.cycle.start = parseInt(value, 10);
   else if (key === 'cycleMode' && u.cycle) u.cycle.mode = value;
   else if (key === 'cycleBars' && u.cycle) u.cycle.bars = clampInt(value, 1, 64);
@@ -1729,6 +2087,7 @@ function updateUnit(id, key, value, rerender) {
   renderSummary(); renderSectionJumper();
   if (!isRunning && !isPaused) updateTimerDisplay();
   if ((isRunning || isPaused) && units[currentIndex] === u && key.startsWith('cycle')) { resetCycle(); }
+  if ((isRunning || isPaused) && units[currentIndex] === u && key === 'focus') { resetFocus(); }
 }
 
 function cycleTag(c) {
@@ -1744,6 +2103,7 @@ function renderUnits() {
     const tags = [];
     if (u.cycle) tags.push('<span class="tag cycle">' + esc(cycleTag(u.cycle)) + '</span>');
     if (u.bpm) tags.push('<span class="tag bpm">♩ ' + u.bpm + '</span>');
+    if (u.focus) tags.push('<span class="tag cycle">🧭 ' + esc(t('focusEvery', { s: u.focus })) + '</span>');
     if (u.tip && !open) tags.push('<span class="tag" title="' + esc(u.tip) + '">💡 ' + esc(u.tip.length > 48 ? u.tip.slice(0, 46) + '…' : u.tip) + '</span>');
 
     html += '<div class="unit' + cls + '">' +
@@ -1776,6 +2136,10 @@ function renderUnits() {
       html += '<div class="unit-details">' +
         '<label class="field full"><span>' + esc(t('tip')) + '</span><textarea placeholder="' + esc(t('tipPh')) + '" oninput="updateUnit(' + u.id + ',\'tip\',this.value)">' + esc(u.tip) + '</textarea></label>' +
         '<label class="field"><span>' + esc(t('unitBpm')) + '</span><input type="number" min="20" max="300" inputmode="numeric" value="' + (u.bpm || '') + '" placeholder="' + esc(t('unitBpmPh')) + '" onchange="updateUnit(' + u.id + ',\'bpm\',this.value,true)"></label>' +
+        '<label class="field"><span>🧭 ' + esc(t('focusUnit')) + '</span><select onchange="updateUnit(' + u.id + ',\'focus\',this.value,true)">' +
+          '<option value="">' + esc(t('cycleNone')) + '</option>' +
+          [15, 20, 30, 45, 60, 90, 120].map(s => '<option value="' + s + '"' + (u.focus === s ? ' selected' : '') + '>' + esc(t('focusEvery', { s })) + '</option>').join('') +
+        '</select></label>' +
         '<label class="field"><span>🔁 ' + esc(t('cycle')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleSemi\',this.value,true)">' + semiOpts + '</select></label>';
       if (c) {
         html += '<label class="field"><span>' + esc(t('startKey')) + '</span><select onchange="updateUnit(' + u.id + ',\'cycleStart\',this.value,true)">' + keyOpts + '</select></label>' +
@@ -1944,6 +2308,161 @@ function renderPresetSelect() {
 }
 
 // =====================================================================
+// Musician profile (pie chart: categories rated 0–10)
+// =====================================================================
+const PIE_COLORS = ['#ffd700', '#4d8bff', '#00d97e', '#ff6b6b', '#c084fc', '#fb923c', '#06b6d4', '#f472b6', '#a3e635', '#facc15', '#60a5fa', '#34d399'];
+let profile = null;
+function defaultProfile() {
+  return { cats: t('defaultCats').map(n => ({ name: n, score: 5, ten: '' })), who: [{ name: '', why: '' }], snaps: [], cmp: -1 };
+}
+function getProfile() {
+  if (!profile) {
+    try {
+      const p = JSON.parse(localStorage.getItem('ppProfile') || 'null');
+      if (p && Array.isArray(p.cats) && p.cats.length) profile = Object.assign({ who: [], snaps: [], cmp: -1 }, p);
+    } catch (e) {}
+    if (!profile) profile = defaultProfile();
+  }
+  return profile;
+}
+function saveProfile() { localStorage.setItem('ppProfile', JSON.stringify(profile)); }
+
+function setCat(i, key, value) {
+  const p = getProfile();
+  const c = p.cats[i];
+  if (!c) return;
+  if (key === 'score') {
+    c.score = Math.max(0, Math.min(10, parseFloat(value) || 0));
+    const lbl = document.getElementById('catVal' + i);
+    if (lbl) lbl.textContent = c.score + '/10';
+  } else c[key] = value;
+  saveProfile();
+  renderPie();
+}
+function addCat() {
+  const p = getProfile();
+  if (p.cats.length >= 12) { alert(t('maxCats')); return; }
+  p.cats.push({ name: '', score: 5, ten: '' });
+  saveProfile(); renderProfile();
+  const inputs = document.querySelectorAll('#catList .cat-top input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+function removeCat(i) {
+  const p = getProfile();
+  if (p.cats.length <= 3) { alert(t('minCats')); return; }
+  p.cats.splice(i, 1);
+  saveProfile(); renderProfile();
+}
+function setWho(i, key, value) { const p = getProfile(); if (p.who[i]) { p.who[i][key] = value; saveProfile(); } }
+function addWho() { getProfile().who.push({ name: '', why: '' }); saveProfile(); renderWho(); }
+function removeWho(i) { getProfile().who.splice(i, 1); saveProfile(); renderWho(); }
+function whyToCats() {
+  const p = getProfile();
+  const existing = new Set(p.cats.map(c => c.name.trim().toLowerCase()));
+  let truncated = false;
+  p.who.forEach(w => (w.why || '').split(/[,;\n]/).map(s => s.trim()).filter(Boolean).forEach(q => {
+    if (existing.has(q.toLowerCase())) return;
+    if (p.cats.length >= 12) { truncated = true; return; }
+    p.cats.push({ name: q, score: 5, ten: '' });
+    existing.add(q.toLowerCase());
+  }));
+  saveProfile(); renderProfile();
+  if (truncated) alert(t('maxCats'));
+}
+function saveSnapshot() {
+  const p = getProfile();
+  const scores = {};
+  p.cats.forEach(c => { if (c.name.trim()) scores[c.name.trim()] = c.score; });
+  const date = new Date().toISOString();
+  p.snaps.push({ date, scores });
+  saveProfile(); renderSnapSelect();
+  alert(t('snapSaved', { d: fmtDate(date) }));
+}
+function setCompare(v) { const p = getProfile(); p.cmp = v === '' ? -1 : parseInt(v, 10); saveProfile(); renderPie(); }
+function deleteSnapshot() {
+  const p = getProfile();
+  if (p.cmp < 0 || !p.snaps[p.cmp]) return;
+  if (!confirm(t('snapDelete') + ': ' + fmtDate(p.snaps[p.cmp].date) + '?')) return;
+  p.snaps.splice(p.cmp, 1); p.cmp = -1;
+  saveProfile(); renderSnapSelect(); renderPie();
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB') + ' ' + d.toLocaleTimeString(lang === 'de' ? 'de-DE' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderPie() {
+  const p = getProfile();
+  const n = p.cats.length, R = 92, TAU = Math.PI * 2;
+  const pt = (r, a) => (r * Math.cos(a)).toFixed(2) + ' ' + (r * Math.sin(a)).toFixed(2);
+  let s = '<svg viewBox="-230 -135 460 270" role="img" aria-label="' + esc(t('profile')) + '">';
+  for (let k = 2; k <= 10; k += 2) {
+    s += '<circle r="' + (R * k / 10) + '" fill="none" stroke="rgba(255,255,255,' + (k === 10 ? 0.35 : 0.1) + ')" stroke-width="1"' + (k === 10 ? '' : ' stroke-dasharray="2 3"') + '/>';
+  }
+  const snap = p.cmp >= 0 ? p.snaps[p.cmp] : null;
+  p.cats.forEach((c, i) => {
+    const a0 = -Math.PI / 2 + i * TAU / n, a1 = a0 + TAU / n, am = (a0 + a1) / 2;
+    const color = PIE_COLORS[i % PIE_COLORS.length];
+    const r = R * c.score / 10;
+    if (r > 0) s += '<path d="M0 0 L' + pt(r, a0) + ' A' + r + ' ' + r + ' 0 0 1 ' + pt(r, a1) + ' Z" fill="' + color + '" fill-opacity="0.72" stroke="' + color + '" stroke-width="1.5"/>';
+    s += '<line x1="0" y1="0" x2="' + (R * Math.cos(a0)).toFixed(2) + '" y2="' + (R * Math.sin(a0)).toFixed(2) + '" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>';
+    if (snap && c.name.trim() && snap.scores[c.name.trim()] !== undefined) {
+      const rs = Math.max(0.5, R * snap.scores[c.name.trim()] / 10);
+      s += '<path d="M' + pt(rs, a0) + ' A' + rs + ' ' + rs + ' 0 0 1 ' + pt(rs, a1) + '" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 4"/>';
+    }
+    const cx = Math.cos(am), sy = Math.sin(am);
+    const lx = (R + 14) * cx, ly = (R + 14) * sy + (sy > 0.3 ? 10 : (sy < -0.3 ? -2 : 4));
+    const anchor = cx > 0.25 ? 'start' : (cx < -0.25 ? 'end' : 'middle');
+    let name = (c.name || '–').trim() || '–';
+    if (name.length > 17) name = name.slice(0, 16) + '…';
+    s += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + anchor + '" font-size="12" fill="#fff" font-weight="600">' + esc(name) +
+      ' <tspan fill="' + color + '" font-weight="800">' + c.score + '</tspan></text>';
+  });
+  s += '<circle r="3" fill="#fff"/></svg>';
+  document.getElementById('pieChart').innerHTML = s;
+
+  const named = p.cats.filter(c => c.name.trim());
+  const hint = document.getElementById('pieHint');
+  if (named.length) {
+    const w = named.reduce((a, c) => (c.score < a.score ? c : a), named[0]);
+    hint.textContent = t('weakest', { c: w.name.trim(), n: w.score });
+  } else hint.textContent = '';
+}
+function renderCatList() {
+  const p = getProfile();
+  document.getElementById('catList').innerHTML = p.cats.map((c, i) =>
+    '<div class="cat-row"><div class="cat-top">' +
+      '<span class="cat-dot" style="background:' + PIE_COLORS[i % PIE_COLORS.length] + '"></span>' +
+      '<input type="text" value="' + esc(c.name) + '" placeholder="' + esc(t('catNamePh')) + '" oninput="setCat(' + i + ',\'name\',this.value)">' +
+      '<button class="icon-btn danger" onclick="removeCat(' + i + ')" aria-label="' + esc(t('remove')) + '">✕</button>' +
+    '</div>' +
+    '<div class="cat-score"><input type="range" class="bpm-slider" min="0" max="10" step="1" value="' + c.score + '" oninput="setCat(' + i + ',\'score\',this.value)" aria-label="' + esc(c.name) + '"><b id="catVal' + i + '">' + c.score + '/10</b></div>' +
+    '<input type="text" class="cat-ten" value="' + esc(c.ten || '') + '" placeholder="' + esc(t('tenPh')) + '" oninput="setCat(' + i + ',\'ten\',this.value)">' +
+    '</div>').join('');
+}
+function renderWho() {
+  const p = getProfile();
+  document.getElementById('whoList').innerHTML = p.who.map((w, i) =>
+    '<div class="who-row">' +
+      '<input type="text" value="' + esc(w.name) + '" placeholder="' + esc(t('whoPh')) + '" oninput="setWho(' + i + ',\'name\',this.value)">' +
+      '<input type="text" value="' + esc(w.why) + '" placeholder="' + esc(t('whyPh')) + '" oninput="setWho(' + i + ',\'why\',this.value)">' +
+      '<button class="icon-btn danger" onclick="removeWho(' + i + ')" aria-label="' + esc(t('remove')) + '">✕</button>' +
+    '</div>').join('');
+}
+function renderSnapSelect() {
+  const p = getProfile();
+  const sel = document.getElementById('snapSelect');
+  sel.innerHTML = '<option value="">' + esc(t('snapNone')) + '</option>' +
+    p.snaps.map((sn, i) => '<option value="' + i + '">' + esc(fmtDate(sn.date)) + '</option>').join('');
+  if (p.cmp >= p.snaps.length) p.cmp = -1;
+  sel.value = p.cmp >= 0 ? String(p.cmp) : '';
+}
+function renderProfile() {
+  if (!localStorage.getItem('ppProfile')) profile = defaultProfile(); // untouched defaults follow the language
+  renderCatList(); renderWho(); renderSnapSelect(); renderPie();
+}
+
+// =====================================================================
 // Language & static texts
 // =====================================================================
 function setLang(l) {
@@ -1983,6 +2502,10 @@ function applyStaticTexts() {
   const bs = document.getElementById('beepsSelect');
   bs.innerHTML = '<option value="1">' + esc(t('on')) + '</option><option value="0">' + esc(t('off')) + '</option>';
   bs.value = settings.beeps ? '1' : '0';
+
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); el.setAttribute('aria-label', el.title); });
+  const cl = document.getElementById('checklistText');
+  if (document.activeElement !== cl) cl.value = getChecklistText();
 }
 function renderAll() {
   applyStaticTexts();
@@ -1994,7 +2517,10 @@ function renderAll() {
   renderPresetSelect();
   updateTimerDisplay();
   renderCycle(false);
+  if (foc) foc.items = parseChecklist();
+  renderFocus(false);
   renderMetroStatus();
+  renderProfile();
 }
 
 function toggleSection(id) { document.getElementById(id).classList.toggle('collapsed'); }
@@ -2009,6 +2535,7 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowRight') { if (cyc) { e.preventDefault(); nextKey(true); } }
   else if (e.key === 'm' || e.key === 'M') { const cb = document.getElementById('metronomeToggle'); cb.checked = !cb.checked; toggleMetronome(); }
   else if (e.key === 't' || e.key === 'T') { tapTempo(); }
+  else if (e.key === 'f' || e.key === 'F') { nextFocus(); }
 });
 
 // =====================================================================
