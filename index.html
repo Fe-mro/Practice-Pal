@@ -407,6 +407,9 @@
   @media (max-width: 899px) {
     body { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
     .desktop-only { display: none !important; }
+    /* backdrop-filter would turn the timer card into the containing block of the
+       fixed control bar (bar then sits on top of the unit buttons) */
+    .timer-card { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.07); }
     .controls {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0;
       background: rgba(10,10,20,0.92);
