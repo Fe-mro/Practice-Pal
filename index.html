@@ -7,8 +7,28 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0a14">
+<meta name="description" content="Übungstimer für Musiker – kostenlos, ohne Tracking, ohne Anmeldung.">
+<meta property="og:title" content="Practice Pal – Übungstimer für Musiker">
+<meta property="og:description" content="Übungsroutinen, Metronom und Übe-Protokoll. 100 % kostenlos, kein Tracking, keine Anmeldung nötig.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://practice-pal-wheat.vercel.app/">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Practice Pal – Übungstimer für Musiker</title>
 <style>
+  /* ===== Install banner ===== */
+  .install-banner {
+    max-width: 1200px; margin: 0 auto 14px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: linear-gradient(135deg, #1c1d3a, #131329);
+    border: 1px solid var(--gold); border-radius: 12px; color: #e8e8f0; font-size: 0.92em;
+  }
+  .install-banner[hidden] { display: none; }
+  .install-banner .ib-text { flex: 1 1 260px; line-height: 1.4; }
+  .install-banner .ib-text b { color: var(--gold); }
+  .install-banner .ib-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .install-banner .btn { min-height: 40px; }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   :root {
@@ -455,6 +475,14 @@
   </div>
 </header>
 
+<div class="install-banner" id="installBanner" hidden>
+  <div class="ib-text" id="installText"></div>
+  <div class="ib-actions">
+    <button class="btn btn-gold btn-small" id="installBtn" type="button" hidden onclick="installApp()"></button>
+    <button class="btn btn-blue btn-small" type="button" onclick="dismissInstall()" data-i18n="installLater"></button>
+  </div>
+</div>
+
 <main class="layout">
   <!-- ===== Left column: timer + metronome ===== -->
   <div class="col col-left">
@@ -573,6 +601,9 @@
           <button class="btn btn-gold btn-small" onclick="saveAsDefaultPreset()">&#9733; <span data-i18n="saveDefault"></span></button>
           <button class="btn btn-blue btn-small" onclick="loadDefaultPreset()">&#9835; <span data-i18n="loadDefault"></span></button>
           <button class="btn btn-red btn-small" onclick="deletePreset()">&#10005; <span data-i18n="delete"></span></button>
+        </div>
+        <div class="preset-row">
+          <button class="btn btn-blue btn-small" onclick="shareRoutineLink()">&#128279; <span data-i18n="shareRoutine"></span></button>
         </div>
       </div>
     </section>
@@ -838,6 +869,15 @@ const I18N = {
     today: 'Heute', last7: 'Letzte 7 Tage', last30: 'Letzte 30 Tage',
     sessionsN: '{n} Sessions', sessions1: '1 Session',
     shareWeek: 'Woche als Bild teilen',
+    shareRoutine: 'Routine als Link teilen',
+    shareRoutineText: 'Probier meine Übe-Routine „{n}“ aus – ein Klick, und sie startet direkt:',
+    promo: '100 % kostenlos · kein Tracking · keine Anmeldung nötig',
+    promoLink: 'Jetzt ausprobieren:',
+    linkCopied: 'Link kopiert – du kannst ihn jetzt teilen.',
+    installText: '<b>Practice Pal als App installieren</b> – kostenlos, ohne Store, ohne Anmeldung. Ein Klick auf einen geteilten Routine-Link startet dann direkt deine Übung.',
+    installBtn: 'App installieren',
+    installIos: '<b>Practice Pal auf dem Home-Bildschirm</b> – Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“. Ein Klick auf einen geteilten Routine-Link startet dann direkt deine Übung.',
+    installLater: 'Später',
     shareImage: 'Als Bild teilen',
     shareProfile: 'Profil als Bild teilen',
     exportCsv: 'Export (CSV / Excel)',
@@ -1002,6 +1042,15 @@ const I18N = {
     today: 'Today', last7: 'Last 7 days', last30: 'Last 30 days',
     sessionsN: '{n} sessions', sessions1: '1 session',
     shareWeek: 'Share week as image',
+    shareRoutine: 'Share routine as link',
+    shareRoutineText: 'Try my practice routine “{n}” – one tap and it starts right away:',
+    promo: '100% free · no tracking · no sign-up needed',
+    promoLink: 'Try it now:',
+    linkCopied: 'Link copied – you can share it now.',
+    installText: '<b>Install Practice Pal as an app</b> – free, no app store, no sign-up. A tap on a shared routine link then starts your practice right away.',
+    installBtn: 'Install app',
+    installIos: '<b>Add Practice Pal to your home screen</b> – tap the Share icon at the bottom, then “Add to Home Screen”. A tap on a shared routine link then starts your practice right away.',
+    installLater: 'Later',
     shareImage: 'Share as image',
     shareProfile: 'Share profile as image',
     exportCsv: 'Export (CSV / Excel)',
@@ -3026,7 +3075,9 @@ function imgCanvas() {
   x.fillStyle = g; x.fillRect(0, 0, IMG_W, IMG_H);
   x.fillStyle = '#ffd700'; x.font = '800 44px ' + FONT; x.textBaseline = 'alphabetic';
   x.fillText('♫ Practice Pal', 70, 110);
-  x.fillStyle = '#a0a3bd'; x.font = '500 26px ' + FONT;
+  x.fillStyle = '#a0a3bd'; x.font = '500 24px ' + FONT;
+  x.fillText(t('promo'), 70, IMG_H - 102);
+  x.font = '500 26px ' + FONT;
   x.fillText('practice-pal-wheat.vercel.app', 70, IMG_H - 60);
   return [c, x];
 }
@@ -3327,14 +3378,97 @@ window.addEventListener('resize', () => {
   if (canvas.classList.contains('show')) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 });
 
-// Service worker (PWA install + better background behaviour)
+// Service worker (offline-Cache + Voraussetzung für die Installation als App)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const swCode = "self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => self.clients.claim());";
-    const url = URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' }));
-    navigator.serviceWorker.register(url).catch(() => {});
-  });
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
 }
+
+// =====================================================================
+// Teilen per Link & Deep-Links
+// ?routine=<id>  → eingebaute Routine
+// ?plan=<base64url>  → eigene Routine (wird beim Teilen erzeugt)
+// Beim Öffnen des Links wird die Routine geladen und sofort gestartet.
+// =====================================================================
+const APP_URL = 'https://practice-pal-wheat.vercel.app/';
+function b64urlEncode(str) {
+  let bin = ''; new TextEncoder().encode(str).forEach(b => { bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlDecode(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return new TextDecoder().decode(Uint8Array.from(atob(s), c => c.charCodeAt(0)));
+}
+function routineShareUrl() {
+  // Bibliothek-Übungen werden über ihre ID wiederhergestellt (Name und Tipp kommen aus der Sprache des Empfängers)
+  const sections = units.map(u => {
+    const o = unitForStorage(u);
+    if (u.lib && !u.nameEdited) delete o.name;
+    if (u.lib && !u.tipEdited) delete o.tip;
+    return o;
+  });
+  const data = { name: presetDisplayName() || 'Practice Pal', sections };
+  return APP_URL + '?plan=' + b64urlEncode(JSON.stringify(data));
+}
+async function shareRoutineLink() {
+  if (!units.some(u => u.minutes > 0)) { alert(t('alertNoUnits')); return; }
+  const name = presetDisplayName() || 'Practice Pal';
+  // Werbung dezent unten, der Link steht ganz am Ende
+  const text = t('shareRoutineText', { n: name }) + '\n\n' + t('promo') + '.\n' + t('promoLink') + ' ' + routineShareUrl();
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Practice Pal – ' + name, text }); return; }
+    catch (err) { if (err && err.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(text); alert(t('linkCopied')); }
+  catch (e) { prompt(t('shareRoutine'), text); }
+}
+function handleDeepLink() {
+  const p = new URLSearchParams(location.search);
+  const routine = p.get('routine'), plan = p.get('plan');
+  if (!routine && !plan) return false;
+  try {
+    if (plan) {
+      const data = JSON.parse(b64urlDecode(plan));
+      if (!data || !Array.isArray(data.sections) || !data.sections.length) return false;
+      loadUnitsFromData(data);
+    } else {
+      if (!BUILTIN.some(b => b.id === routine)) return false;
+      loadUnitsFromBuiltin(routine);
+    }
+  } catch (e) { return false; }
+  afterPresetLoad();
+  history.replaceState(null, '', '/'); // Link nicht bei jedem Neuladen erneut starten
+  return true;
+}
+
+// =====================================================================
+// App installieren (Banner beim Öffnen; Chrome/Edge per Knopf, iOS per Anleitung)
+// =====================================================================
+let deferredInstall = null;
+const INSTALL_SNOOZE_KEY = 'ppInstallDismissedAt';
+const INSTALL_SNOOZE_MS = 7 * 24 * 3600 * 1000;
+function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+function isIos() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function installSnoozed() { const ts = parseInt(localStorage.getItem(INSTALL_SNOOZE_KEY) || '0', 10); return ts > 0 && Date.now() - ts < INSTALL_SNOOZE_MS; }
+function showInstallBanner(kind) {
+  if (isStandalone() || installSnoozed()) return;
+  document.getElementById('installText').innerHTML = kind === 'ios' ? t('installIos') : t('installText');
+  const btn = document.getElementById('installBtn');
+  btn.textContent = t('installBtn');
+  btn.hidden = kind !== 'native';
+  document.getElementById('installBanner').hidden = false;
+}
+function hideInstallBanner() { document.getElementById('installBanner').hidden = true; }
+function installApp() {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(() => { deferredInstall = null; hideInstallBanner(); });
+}
+function dismissInstall() { localStorage.setItem(INSTALL_SNOOZE_KEY, String(Date.now())); hideInstallBanner(); }
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; showInstallBanner('native'); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; hideInstallBanner(); });
+// Ein erster Tipp entsperrt den Ton (iOS/Safari verlangen eine Nutzeraktion dafür)
+document.addEventListener('pointerdown', () => { ensureAudioCtx(); }, { once: true });
 
 // =====================================================================
 // Init
@@ -3344,8 +3478,11 @@ function init() {
   document.getElementById('bpmSlider').value = metro.bpm;
   document.getElementById('volumeBar').style.width = (metro.vol * 100) + '%';
   libFilter = 'jazz';
-  loadDefaultPreset();
+  const deepLinked = handleDeepLink();
+  if (!deepLinked) loadDefaultPreset();
   renderAll();
+  if (isIos()) showInstallBanner('ios');
+  if (deepLinked) setTimeout(startTimer, 300);
 }
 init();
 </script>

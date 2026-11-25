@@ -17,5 +17,7 @@
 - **Musiker-Profil:** eigene Kategorien mit 0–10 Punkten als Tortendiagramm, Vorbilder (Wer? Warum?), gespeicherte Stände zum Vergleich
 - Timer pro Einheit, Gesamtzeit, Countdown-Töne, Bildschirm bleibt an, Feuerwerk zum Schluss
 - Eigene Vorlagen werden im Browser gespeichert (localStorage)
+- **Routinen teilen:** „Routine als Link teilen“ erzeugt einen Link (`?routine=<id>` für eingebaute, `?plan=<…>` für eigene Routinen). Wer ihn öffnet, bekommt die Routine geladen und sofort gestartet.
+- **Als App installierbar:** Manifest (`manifest.webmanifest`), Service Worker (`sw.js`) und Icons. Beim Öffnen erscheint ein Banner zum Installieren (iOS: Anleitung über „Zum Home-Bildschirm“).
 
 Eine einzige `index.html`, ohne Build-Schritt. Jeder Push auf `main` wird automatisch über Vercel veröffentlicht.
