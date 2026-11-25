@@ -17,18 +17,23 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Practice Pal – Übungstimer für Musiker</title>
 <style>
-  /* ===== Install banner ===== */
-  .install-banner {
-    max-width: 1200px; margin: 0 auto 14px; padding: 12px 14px;
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    background: linear-gradient(135deg, #1c1d3a, #131329);
-    border: 1px solid var(--gold); border-radius: 12px; color: #e8e8f0; font-size: 0.92em;
+  /* ===== Install hint: small, optional floating button ===== */
+  .install-fab {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 14px; z-index: 900;
+    display: flex; align-items: center; flex-wrap: wrap; justify-content: center;
+    max-width: calc(100vw - 32px);
+    background: rgba(20, 20, 40, 0.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35); font-size: 0.82em; color: #a9acc8;
+    opacity: 0.85; transition: opacity 0.2s;
   }
-  .install-banner[hidden] { display: none; }
-  .install-banner .ib-text { flex: 1 1 260px; line-height: 1.4; }
-  .install-banner .ib-text b { color: var(--gold); }
-  .install-banner .ib-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .install-banner .btn { min-height: 40px; }
+  .install-fab:hover, .install-fab:focus-within { opacity: 1; }
+  .install-fab[hidden], .install-fab .fab-info[hidden] { display: none; }
+  .install-fab .fab-main { background: none; border: none; color: inherit; padding: 7px 12px; cursor: pointer; font: inherit; }
+  .install-fab .fab-close { background: none; border: none; color: #7d80a0; padding: 4px 10px 4px 2px; cursor: pointer; font-size: 1.1em; line-height: 1; }
+  .install-fab .fab-info { flex-basis: 100%; padding: 4px 16px 10px; line-height: 1.45; text-align: center; font-size: 0.95em; }
+  .install-fab .fab-info b { color: var(--gold); font-weight: 600; }
+  @media (max-width: 899px) { .install-fab { bottom: 84px; } } /* über der Steuerleiste auf dem Handy */
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   :root {
@@ -475,12 +480,10 @@
   </div>
 </header>
 
-<div class="install-banner" id="installBanner" hidden>
-  <div class="ib-text" id="installText"></div>
-  <div class="ib-actions">
-    <button class="btn btn-gold btn-small" id="installBtn" type="button" hidden onclick="installApp()"></button>
-    <button class="btn btn-blue btn-small" type="button" onclick="dismissInstall()" data-i18n="installLater"></button>
-  </div>
+<div class="install-fab" id="installBanner" hidden>
+  <div class="fab-info" id="installText" hidden></div>
+  <button class="fab-main" id="installBtn" type="button" onclick="installTap()">&#11015; <span id="installLabel"></span></button>
+  <button class="fab-close" type="button" onclick="dismissInstall()" data-i18n-title="installLater" aria-label="×">×</button>
 </div>
 
 <main class="layout">
@@ -874,8 +877,8 @@ const I18N = {
     promo: '100 % kostenlos · kein Tracking · keine Anmeldung nötig',
     promoLink: 'Jetzt ausprobieren:',
     linkCopied: 'Link kopiert – du kannst ihn jetzt teilen.',
-    installText: '<b>Practice Pal als App installieren</b> – kostenlos, ohne Store, ohne Anmeldung. Ein Klick auf einen geteilten Routine-Link startet dann direkt deine Übung.',
-    installBtn: 'App installieren',
+    installBtn: 'Als App installieren',
+    alertShareBuiltin: 'Die Vorlagen der App lassen sich nicht teilen. Speichere deine eigene Routine zuerst unter einem Namen (Speichern) – dann kannst du sie teilen.',
     installIos: '<b>Practice Pal auf dem Home-Bildschirm</b> – Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“. Ein Klick auf einen geteilten Routine-Link startet dann direkt deine Übung.',
     installLater: 'Später',
     shareImage: 'Als Bild teilen',
@@ -1047,8 +1050,8 @@ const I18N = {
     promo: '100% free · no tracking · no sign-up needed',
     promoLink: 'Try it now:',
     linkCopied: 'Link copied – you can share it now.',
-    installText: '<b>Install Practice Pal as an app</b> – free, no app store, no sign-up. A tap on a shared routine link then starts your practice right away.',
-    installBtn: 'Install app',
+    installBtn: 'Install as app',
+    alertShareBuiltin: 'Built-in templates can’t be shared. Save your own routine under a name first (Save) – then you can share it.',
     installIos: '<b>Add Practice Pal to your home screen</b> – tap the Share icon at the bottom, then “Add to Home Screen”. A tap on a shared routine link then starts your practice right away.',
     installLater: 'Later',
     shareImage: 'Share as image',
@@ -3407,12 +3410,15 @@ function routineShareUrl() {
     if (u.lib && !u.tipEdited) delete o.tip;
     return o;
   });
-  const data = { name: presetDisplayName() || 'Practice Pal', sections };
+  const data = { name: document.getElementById('presetName').value.trim() || 'Practice Pal', sections };
   return APP_URL + '?plan=' + b64urlEncode(JSON.stringify(data));
 }
 async function shareRoutineLink() {
+  // Nur eigene Routinen teilen – die eingebauten Vorlagen nicht
+  if (currentPresetRef && currentPresetRef.type === 'builtin') { alert(t('alertShareBuiltin')); return; }
   if (!units.some(u => u.minutes > 0)) { alert(t('alertNoUnits')); return; }
-  const name = presetDisplayName() || 'Practice Pal';
+  const name = document.getElementById('presetName').value.trim();
+  if (!name) { alert(t('alertName')); return; }
   // Werbung dezent unten, der Link steht ganz am Ende
   const text = t('shareRoutineText', { n: name }) + '\n\n' + t('promo') + '.\n' + t('promoLink') + ' ' + routineShareUrl();
   if (navigator.share) {
@@ -3450,22 +3456,28 @@ const INSTALL_SNOOZE_MS = 7 * 24 * 3600 * 1000;
 function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
 function isIos() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
 function installSnoozed() { const ts = parseInt(localStorage.getItem(INSTALL_SNOOZE_KEY) || '0', 10); return ts > 0 && Date.now() - ts < INSTALL_SNOOZE_MS; }
+// Dezenter Floating-Button unten; erscheint nach kurzer Zeit, ist jederzeit wegklickbar
+let installKind = null;
 function showInstallBanner(kind) {
   if (isStandalone() || installSnoozed()) return;
-  document.getElementById('installText').innerHTML = kind === 'ios' ? t('installIos') : t('installText');
-  const btn = document.getElementById('installBtn');
-  btn.textContent = t('installBtn');
-  btn.hidden = kind !== 'native';
+  installKind = kind;
+  document.getElementById('installLabel').textContent = t('installBtn');
+  document.getElementById('installText').innerHTML = kind === 'ios' ? t('installIos') : '';
+  document.getElementById('installText').hidden = true;
   document.getElementById('installBanner').hidden = false;
 }
 function hideInstallBanner() { document.getElementById('installBanner').hidden = true; }
+function installTap() {
+  if (installKind === 'ios') { const info = document.getElementById('installText'); info.hidden = !info.hidden; return; }
+  installApp();
+}
 function installApp() {
   if (!deferredInstall) return;
   deferredInstall.prompt();
   deferredInstall.userChoice.then(() => { deferredInstall = null; hideInstallBanner(); });
 }
 function dismissInstall() { localStorage.setItem(INSTALL_SNOOZE_KEY, String(Date.now())); hideInstallBanner(); }
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; showInstallBanner('native'); });
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; setTimeout(() => showInstallBanner('native'), 4000); });
 window.addEventListener('appinstalled', () => { deferredInstall = null; hideInstallBanner(); });
 // Ein erster Tipp entsperrt den Ton (iOS/Safari verlangen eine Nutzeraktion dafür)
 document.addEventListener('pointerdown', () => { ensureAudioCtx(); }, { once: true });
@@ -3481,7 +3493,7 @@ function init() {
   const deepLinked = handleDeepLink();
   if (!deepLinked) loadDefaultPreset();
   renderAll();
-  if (isIos()) showInstallBanner('ios');
+  if (isIos()) setTimeout(() => showInstallBanner('ios'), 4000);
   if (deepLinked) setTimeout(startTimer, 300);
 }
 init();
