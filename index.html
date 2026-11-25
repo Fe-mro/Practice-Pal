@@ -878,7 +878,6 @@ const I18N = {
     promoLink: 'Jetzt ausprobieren:',
     linkCopied: 'Link kopiert – du kannst ihn jetzt teilen.',
     installBtn: 'Als App installieren',
-    alertShareBuiltin: 'Die Vorlagen der App lassen sich nicht teilen. Speichere deine eigene Routine zuerst unter einem Namen (Speichern) – dann kannst du sie teilen.',
     installIos: '<b>Practice Pal auf dem Home-Bildschirm</b> – Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“. Ein Klick auf einen geteilten Routine-Link startet dann direkt deine Übung.',
     installLater: 'Später',
     shareImage: 'Als Bild teilen',
@@ -1051,7 +1050,6 @@ const I18N = {
     promoLink: 'Try it now:',
     linkCopied: 'Link copied – you can share it now.',
     installBtn: 'Install as app',
-    alertShareBuiltin: 'Built-in templates can’t be shared. Save your own routine under a name first (Save) – then you can share it.',
     installIos: '<b>Add Practice Pal to your home screen</b> – tap the Share icon at the bottom, then “Add to Home Screen”. A tap on a shared routine link then starts your practice right away.',
     installLater: 'Later',
     shareImage: 'Share as image',
@@ -3414,8 +3412,6 @@ function routineShareUrl() {
   return APP_URL + '?plan=' + b64urlEncode(JSON.stringify(data));
 }
 async function shareRoutineLink() {
-  // Nur eigene Routinen teilen – die eingebauten Vorlagen nicht
-  if (currentPresetRef && currentPresetRef.type === 'builtin') { alert(t('alertShareBuiltin')); return; }
   if (!units.some(u => u.minutes > 0)) { alert(t('alertNoUnits')); return; }
   const name = document.getElementById('presetName').value.trim();
   if (!name) { alert(t('alertName')); return; }
